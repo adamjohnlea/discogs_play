@@ -120,7 +120,7 @@ class AuthService {
             return false;
         }
         
-        if ($this->user->verifyPassword($password, $user['password_hash'])) {
+        if ($this->verifyCredentials($username, $password)) {
             // Set session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
@@ -136,6 +136,15 @@ class AuthService {
         }
         
         return false;
+    }
+    
+    public function verifyCredentials($username, $password) {
+        $user = $this->user->findByUsername($username);
+        if (!$user) {
+            return false;
+        }
+        
+        return $this->user->verifyPassword($password, $user['password_hash']);
     }
     
     public function logout() {

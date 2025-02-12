@@ -34,9 +34,18 @@ class ProfileController {
         // Get collection statistics
         $collectionStats = $this->getCollectionStats($_SESSION['user_id']);
         
+        // Get any flash messages
+        $success = $_SESSION['profile_success'] ?? null;
+        $error = $_SESSION['profile_error'] ?? null;
+        
+        // Clear flash messages
+        unset($_SESSION['profile_success'], $_SESSION['profile_error']);
+        
         echo $this->twig->render('profile.html.twig', [
             'user' => $userData,
-            'stats' => $collectionStats
+            'stats' => $collectionStats,
+            'profile_success' => $success,
+            'profile_error' => $error
         ]);
     }
     
@@ -50,12 +59,13 @@ class ProfileController {
         $newPassword = $_POST['new_password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
         
-        // Verify current password
-        $stmt = $this->db->prepare("SELECT password_hash FROM users WHERE id = :user_id");
+        // Get user data including password hash
+        $stmt = $this->db->prepare("SELECT username, password_hash FROM users WHERE id = :user_id");
         $stmt->execute([':user_id' => $_SESSION['user_id']]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$this->authService->verifyPassword($currentPassword, $user['password_hash'])) {
+        // Verify current password directly using password_verify
+        if (!$user || !password_verify($currentPassword, $user['password_hash'])) {
             $_SESSION['profile_error'] = 'Current password is incorrect';
             header('Location: /profile');
             exit;
@@ -65,6 +75,13 @@ class ProfileController {
         $errors = $this->authService->validatePassword($newPassword, $confirmPassword);
         if (!empty($errors)) {
             $_SESSION['profile_error'] = implode(', ', $errors);
+            header('Location: /profile');
+            exit;
+        }
+        
+        // Ensure new password is different from current password
+        if ($currentPassword === $newPassword) {
+            $_SESSION['profile_error'] = 'New password must be different from current password';
             header('Location: /profile');
             exit;
         }

@@ -94,7 +94,7 @@
                     <h4 class="mb-0">Change Password</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/profile/password">
+                    <form method="POST" action="/profile/password" id="passwordForm">
                         <div class="mb-3">
                             <label for="current_password" class="form-label">Current Password</label>
                             <input type="password" class="form-control" id="current_password" name="current_password" required>
@@ -103,6 +103,32 @@
                         <div class="mb-3">
                             <label for="new_password" class="form-label">New Password</label>
                             <input type="password" class="form-control" id="new_password" name="new_password" required>
+                            <div class="password-requirements mt-2">
+                                <p class="requirement" id="length-check">
+                                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                    At least 8 characters
+                                </p>
+                                <p class="requirement" id="uppercase-check">
+                                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                    Contains uppercase letter
+                                </p>
+                                <p class="requirement" id="lowercase-check">
+                                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                    Contains lowercase letter
+                                </p>
+                                <p class="requirement" id="number-check">
+                                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                    Contains number
+                                </p>
+                                <p class="requirement" id="symbol-check">
+                                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                    Contains symbol
+                                </p>
+                                <p class="requirement" id="match-check">
+                                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                    Passwords match
+                                </p>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
@@ -110,7 +136,12 @@
                             <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary">Update Password</button>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="submit" class="btn btn-primary" id="updatePasswordBtn" disabled>Update Password</button>
+                            <div id="submitFeedback" class="text-danger" style="display: none;">
+                                Please fill in all fields correctly
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -174,14 +205,107 @@
 {% endblock %}
 
 {% block javascripts %}
+{{ parent() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const confirmInput = document.getElementById('confirm_deletion');
     const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const passwordForm = document.getElementById('passwordForm');
+    const currentPassword = document.getElementById('current_password');
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const updatePasswordBtn = document.getElementById('updatePasswordBtn');
+    const submitFeedback = document.getElementById('submitFeedback');
     
-    confirmInput.addEventListener('input', function() {
-        confirmBtn.disabled = this.value !== 'DELETE';
+    // Account deletion confirmation
+    if (confirmInput && confirmBtn) {
+        confirmInput.addEventListener('input', function() {
+            confirmBtn.disabled = this.value !== 'DELETE';
+        });
+    }
+    
+    function validatePassword() {
+        const value = newPassword.value;
+        const confirmValue = confirmPassword.value;
+        const currentValue = currentPassword.value;
+        
+        // Length check
+        updateRequirement('length-check', value.length >= 8);
+        
+        // Uppercase check
+        updateRequirement('uppercase-check', /[A-Z]/.test(value));
+        
+        // Lowercase check
+        updateRequirement('lowercase-check', /[a-z]/.test(value));
+        
+        // Number check
+        updateRequirement('number-check', /[0-9]/.test(value));
+        
+        // Symbol check
+        updateRequirement('symbol-check', /[!@#$%^&*(),.?":{}|<>]/.test(value));
+        
+        // Match check
+        updateRequirement('match-check', value === confirmValue && value !== '');
+        
+        // Enable/disable update button based on all requirements being met
+        const allRequirementsMet = document.querySelectorAll('.requirement i.text-success').length === 6;
+        const currentPasswordValid = currentValue.length > 0;
+        
+        updatePasswordBtn.disabled = !allRequirementsMet || !currentPasswordValid;
+        submitFeedback.style.display = (!allRequirementsMet || !currentPasswordValid) ? 'block' : 'none';
+    }
+    
+    function updateRequirement(id, valid) {
+        const element = document.getElementById(id);
+        const icon = element.querySelector('i');
+        
+        if (valid) {
+            icon.classList.remove('fa-circle-xmark', 'text-danger');
+            icon.classList.add('fa-circle-check', 'text-success');
+            element.classList.remove('text-danger');
+            element.classList.add('text-success');
+        } else {
+            icon.classList.remove('fa-circle-check', 'text-success');
+            icon.classList.add('fa-circle-xmark', 'text-danger');
+            element.classList.remove('text-success');
+            element.classList.add('text-danger');
+        }
+    }
+    
+    // Add event listeners for real-time validation
+    currentPassword.addEventListener('input', validatePassword);
+    newPassword.addEventListener('input', validatePassword);
+    confirmPassword.addEventListener('input', validatePassword);
+    
+    // Form submission handling
+    passwordForm.addEventListener('submit', function(event) {
+        if (updatePasswordBtn.disabled) {
+            event.preventDefault();
+            submitFeedback.style.display = 'block';
+        }
     });
+    
+    // If there's a profile error, highlight the current password field
+    {% if profile_error is defined and profile_error == 'Current password is incorrect' %}
+        currentPassword.classList.add('is-invalid');
+    {% endif %}
 });
 </script>
+
+<style>
+.password-requirements {
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.requirement {
+    margin-bottom: 5px;
+    transition: color 0.3s ease;
+}
+
+.requirement i {
+    margin-right: 8px;
+    transition: color 0.3s ease;
+}
+</style>
 {% endblock %} 
