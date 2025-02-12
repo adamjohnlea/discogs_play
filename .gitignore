@@ -1,2 +1,8 @@
 .idea
 .DS_Store
+/vendor/
+/cache/
+/public/img/covers/*
+/public/img/releases/*
+!public/img/covers/.gitkeep
+!public/img/releases/.gitkeep

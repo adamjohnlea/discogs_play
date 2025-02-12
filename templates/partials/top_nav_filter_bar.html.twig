@@ -1,0 +1,77 @@
+<!-- Pagination / Nav / Filter Bar-->
+<div class="btn-toolbar d-flex justify-content-center p-3" role="toolbar" aria-label="Toolbar with button groups">
+    {% if release_id is not defined or not release_id %}
+        <div class="btn-group btn-group-sm mr-2 p-1" role="group" aria-label="Pagination">
+            <a class="btn btn-primary text-uppercase {{ page == 1 ? 'disabled' : '' }}" 
+               href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page={{ page != 1 ? page - 1 : page }}" 
+               tabindex="-1">&#12298;</a>
+            
+            {% if collection is defined %}
+                {% for x in 1..collection.pagination.pages %}
+                    <a class="btn btn-primary text-uppercase {{ page == x ? 'active disabled' : '' }}"
+                       href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page={{ x }}">{{ x }}</a>
+                {% endfor %}
+            {% endif %}
+
+            <a class="btn btn-primary text-uppercase {{ page == collection.pagination.pages ? 'disabled' : '' }}"
+               href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page={{ page != collection.pagination.pages ? page + 1 : page }}"
+               tabindex="-1">&#12299;</a>
+        </div>
+
+        <div class="btn-group btn-group-sm mr-2 p-1" role="group" aria-label="Per Page">
+            <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{ per_page }} Per Page
+            </button>
+            <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                {% for items in [25, 50, 100] %}
+                    <a class="dropdown-item"
+                       href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ items }}&page=1">{{ items }}</a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="btn-group btn-group-sm mr-2 p-1" role="group" aria-label="Folder Navigation">
+            {% if folders is defined %}
+                {% for folder in folders.folders %}
+                    {% if folder.count >= 1 %}
+                        <a href="/?folder_id={{ folder.id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page=1"
+                           title="View Folder '{{ folder.name }}'"
+                           class="btn btn-primary text-uppercase{{ folder_id == folder.id ? ' disabled' : '' }}">
+                            {{ folder.name }} ({{ folder.count }})
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="btn-group btn-group-sm mr-2 p-1" role="group" aria-label="Sort by Artist or Date Added">
+            <a href="/?folder_id={{ folder_id }}&sort_by=added&order={{ order }}&per_page={{ per_page }}&page={{ page }}"
+               title="Sort By Added"
+               class="btn btn-info text-uppercase{{ sort_by == 'added' ? ' disabled' : '' }}">
+                <i class="fa-solid fa-clock"></i>
+            </a>
+            <a href="/?folder_id={{ folder_id }}&sort_by=artist&order={{ order }}&page={{ page }}"
+               title="Sort By Artist"
+               class="btn btn-info text-uppercase{{ sort_by == 'artist' ? ' disabled' : '' }}">
+                <i class="fa-solid fa-user-group"></i>
+            </a>
+        </div>
+
+        <div class="btn-group btn-group-sm p-1" role="group" aria-label="Ascending or Descending">
+            <a href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order=asc&per_page={{ per_page }}"
+               title="Ascending"
+               class="btn btn-secondary text-uppercase{{ order == 'asc' ? ' disabled' : '' }}">
+                <i class="fa-solid fa-circle-arrow-down"></i>
+            </a>
+            <a href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order=desc&per_page={{ per_page }}&page={{ page }}"
+               title="Descending"
+               class="btn btn-secondary text-uppercase{{ order == 'desc' ? ' disabled' : '' }}">
+                <i class="fa-solid fa-circle-arrow-up"></i>
+            </a>
+        </div>
+    {% else %}
+        <div class="btn-group btn-group-sm mr-2 p-1" role="group">
+            <button type="button" class="btn btn-primary text-uppercase" onclick="history.go(-1)">Back to the Collection</button>
+        </div>
+    {% endif %}
+</div> <!-- Pagination / Nav / Filter Bar--> 

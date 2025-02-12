@@ -1,0 +1,45 @@
+{% extends "layouts/base.html.twig" %}
+
+{% block title %}{{ app_name }} - Collection{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for item in collection.releases %}
+        <!-- Gallery item -->
+        <div class="col-xl-3 col-md-6 col-sm-6 my-3">
+            <div class="card h-100">
+                <a href="/?releaseid={{ item.basic_information.id }}">
+                    <img class="card-img-top rounded p-2" 
+                         src="{{ cover_image(item.basic_information.cover_image, item.basic_information.id) }}" 
+                         alt="{{ item.basic_information.title }}">
+                </a>
+
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex flex-column mt-auto">
+                        <h5 class="card-title">
+                            <i class="fa-solid fa-quote-right text-muted"></i> 
+                            {{ item.basic_information.title }}
+                        </h5>
+                        <h6 class="card-title">
+                            <i class="fa-solid fa-people-group text-muted"></i> 
+                            {{ item.basic_information.artists|map(a => a.name)|join(', ') }}
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <small>added {{ item.date_added|date('m/d/y') }}</small>
+                    {% if item.date_added|date('U') > '-14 days'|date('U') %}
+                        <span class="badge rounded-pill bg-success">Newly Added</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- End gallery Item -->
+    {% else %}
+        <div class="col-12">
+            <p class="text-center">No releases found in your collection.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %} 

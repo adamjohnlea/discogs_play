@@ -1,0 +1,30 @@
+<div class="row">
+    <div class="col-12 mx-auto my-1">
+        <div class="text-white p-3 shadow-sm rounded banner">
+            {% if not app.request.uri matches '/release/' %}
+                <h2 class="display-6">My Discogs Collection</h2>
+                {% if discogs_username is defined %}
+                    <p>Discogs Username: <a href="https://www.discogs.com/user/{{ discogs_username }}">{{ discogs_username }}</a></p>
+                {% endif %}
+            {% endif %}
+
+            {% if release_id is defined %}
+                {% if release_id %}
+                    <h2 class="display-6">
+                        {% if releaseInfo is defined %}
+                            "{{ releaseInfo.title }}"
+                            by {{ releaseInfo.artists|map(a => a.name)|join(', ') }}
+                        {% endif %}
+                    </h2>
+                {% else %}
+                    <p class="lead">
+                        <b>{{ current_folder_name|default('') }}</b>
+                        ({{ current_folder_count|default('0') }} items)
+                        Sorted by: {{ sort_by|default('') }}, 
+                        {{ order|default('') }}ending
+                    </p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div> 
