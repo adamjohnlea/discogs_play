@@ -1,0 +1,37 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+$logger = LogService::getInstance($config);
+$logPath = $logger->getLogPath();
+
+if (!file_exists($logPath)) {
+    echo "No logs found.\n";
+    exit(0);
+}
+
+// Get command line arguments
+$lines = isset($argv[1]) ? intval($argv[1]) : 50;  // Default to last 50 lines
+$filter = isset($argv[2]) ? $argv[2] : null;       // Optional filter string
+
+// Read the log file
+$logs = file($logPath);
+
+// Apply filter if specified
+if ($filter) {
+    $logs = array_filter($logs, function($line) use ($filter) {
+        return stripos($line, $filter) !== false;
+    });
+}
+
+// Get the last N lines
+$logs = array_slice($logs, -$lines);
+
+// Output the logs
+foreach ($logs as $line) {
+    echo $line;
+}
+
+echo "\nShowing last $lines lines" . ($filter ? " filtered by '$filter'" : "") . ".\n";
+echo "Total log file size: " . number_format(filesize($logPath)) . " bytes\n"; 

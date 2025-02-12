@@ -4,75 +4,135 @@ class ImageService {
     private $config;
     private $coversPath;
     private $releasesPath;
+    private $cacheService;
+    private $logger;
 
     public function __construct($config) {
         $this->config = $config;
         $this->coversPath = $config['paths']['public'] . '/img/covers/';
         $this->releasesPath = $config['paths']['public'] . '/img/releases/';
+        $this->cacheService = new CacheService($config);
+        require_once __DIR__ . '/LogService.php';
+        $this->logger = LogService::getInstance($config);
     }
 
     /**
      * Get the URL for a cover image, downloading it if necessary
      */
     public function getCoverImage($imageUrl, $releaseId) {
-        $filename = $this->getImageFilename($imageUrl, $releaseId);
-        $localPath = $this->coversPath . $filename;
-        
-        // Check if image exists locally
-        if (!file_exists($localPath)) {
-            $this->downloadImage($imageUrl, $localPath);
+        // Check cache first
+        $cachedImage = $this->cacheService->getCachedImage($releaseId, 'cover', $imageUrl);
+        if ($cachedImage && $this->cacheService->isImageCacheValid($releaseId, 'cover', $imageUrl)) {
+            return $this->serveImage($cachedImage['image_data'], $cachedImage['mime_type']);
         }
-        
-        // Return local path if file exists, otherwise return original URL
-        return file_exists($localPath) ? "/img/covers/{$filename}" : $imageUrl;
+
+        // If not in cache, download and cache it
+        $imageData = $this->downloadImage($imageUrl);
+        if ($imageData) {
+            $mimeType = $this->getMimeType($imageData);
+            
+            // Ensure release exists in database before storing image
+            $this->ensureReleaseExists($releaseId);
+            
+            try {
+                $this->cacheService->cacheImage($releaseId, 'cover', $imageUrl, $imageData, $mimeType);
+                return $this->serveImage($imageData, $mimeType);
+            } catch (Exception $e) {
+                $this->logger->error("Failed to cache image", [
+                    'release_id' => $releaseId,
+                    'type' => 'cover',
+                    'error' => $e->getMessage()
+                ]);
+                // Return original URL if caching fails
+                return $imageUrl;
+            }
+        }
+
+        // Fallback to original URL if download fails
+        return $imageUrl;
     }
 
     /**
      * Get the URL for a release image, downloading it if necessary
      */
     public function getReleaseImage($imageUrl, $releaseId, $index = 0) {
-        $filename = $this->getImageFilename($imageUrl, $releaseId, $index);
-        $localPath = $this->releasesPath . $filename;
-        
-        // Check if image exists locally
-        if (!file_exists($localPath)) {
-            $this->downloadImage($imageUrl, $localPath);
+        // Check cache first
+        $cachedImage = $this->cacheService->getCachedImage($releaseId, 'release', $imageUrl);
+        if ($cachedImage && $this->cacheService->isImageCacheValid($releaseId, 'release', $imageUrl)) {
+            return $this->serveImage($cachedImage['image_data'], $cachedImage['mime_type']);
         }
-        
-        // Return local path if file exists, otherwise return original URL
-        return file_exists($localPath) ? "/img/releases/{$filename}" : $imageUrl;
+
+        // If not in cache, download and cache it
+        $imageData = $this->downloadImage($imageUrl);
+        if ($imageData) {
+            $mimeType = $this->getMimeType($imageData);
+            
+            // Ensure release exists in database before storing image
+            $this->ensureReleaseExists($releaseId);
+            
+            try {
+                $this->cacheService->cacheImage($releaseId, 'release', $imageUrl, $imageData, $mimeType);
+                return $this->serveImage($imageData, $mimeType);
+            } catch (Exception $e) {
+                $this->logger->error("Failed to cache image", [
+                    'release_id' => $releaseId,
+                    'type' => 'release',
+                    'error' => $e->getMessage()
+                ]);
+                // Return original URL if caching fails
+                return $imageUrl;
+            }
+        }
+
+        // Fallback to original URL if download fails
+        return $imageUrl;
     }
 
     /**
-     * Generate a filename for an image based on its URL and release ID
+     * Ensure a release entry exists in the database
      */
-    private function getImageFilename($url, $releaseId, $index = 0) {
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
-        return $releaseId . ($index ? "_{$index}" : "") . '.' . $extension;
+    private function ensureReleaseExists($releaseId) {
+        if (!$this->cacheService->releaseExists($releaseId)) {
+            $this->logger->debug("Creating placeholder release entry", ['release_id' => $releaseId]);
+            $this->cacheService->createPlaceholderRelease($releaseId);
+        }
     }
 
     /**
-     * Download an image from a URL and save it locally
+     * Download an image from a URL
      */
-    private function downloadImage($url, $localPath) {
+    private function downloadImage($url) {
         try {
-            // Get image data
-            $imageData = @file_get_contents($url);
-            if ($imageData === false) {
-                return false;
-            }
-
-            // Ensure directory exists
-            $directory = dirname($localPath);
-            if (!is_dir($directory)) {
-                mkdir($directory, 0755, true);
-            }
-
-            // Save image
-            return file_put_contents($localPath, $imageData) !== false;
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $imageData = curl_exec($ch);
+            curl_close($ch);
+            return $imageData ?: false;
         } catch (Exception $e) {
-            // Log error in the future
+            $this->logger->error("Failed to download image", [
+                'url' => $url,
+                'error' => $e->getMessage()
+            ]);
             return false;
         }
+    }
+
+    /**
+     * Get MIME type from image data
+     */
+    private function getMimeType($imageData) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        return $finfo->buffer($imageData) ?: 'image/jpeg';
+    }
+
+    /**
+     * Serve image data with proper headers
+     */
+    private function serveImage($imageData, $mimeType) {
+        $base64 = base64_encode($imageData);
+        return "data:{$mimeType};base64,{$base64}";
     }
 } 

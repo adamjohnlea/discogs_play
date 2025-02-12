@@ -6,3 +6,5 @@
 /public/img/releases/*
 !public/img/covers/.gitkeep
 !public/img/releases/.gitkeep
+/logs/app.log
+!logs/.gitkeep

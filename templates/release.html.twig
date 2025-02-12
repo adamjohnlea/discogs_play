@@ -1,6 +1,6 @@
 {% extends "layouts/base.html.twig" %}
 
-{% block title %}{{ app_name }} - {{ releaseInfo.title }}{% endblock %}
+{% block title %}{{ app_name }}{% if releaseInfo is defined and releaseInfo %} - {{ releaseInfo.title }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -8,14 +8,14 @@
     <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
         <div class="bg-white rounded shadow-sm">
             <div class="card h-100">
-                {% if releaseInfo.images|length > 0 %}
+                {% if releaseInfo.images is defined and releaseInfo.images|length > 0 %}
                     <div id="carouselExampleControls" class="carousel slide" data-bs-ride="false">
                         <div class="carousel-inner">
                             {% for image in releaseInfo.images %}
                                 <div class="carousel-item {{ loop.first ? 'active' }}">
                                     <img class="d-block w-100" 
                                          src="{{ release_image(image.resource_url, releaseInfo.id, loop.index0) }}" 
-                                         alt="{{ image.type }}">
+                                         alt="{{ image.type|default('Release Image') }}">
                                 </div>
                             {% endfor %}
                         </div>
@@ -39,45 +39,47 @@
                                 <tr>
                                     <th scope="row" style="width:1%"><i class="fa-fw fa-solid fa-quote-right"></i></th>
                                     <td style="width:1%">Title</td>
-                                    <td>{{ releaseInfo.title }}</td>
+                                    <td>{{ releaseInfo.title|default('Unknown Title') }}</td>
                                 </tr>
-                                <tr>
-                                    <th scope="row"><i class="fa-fw fa-solid fa-people-group"></i></th>
-                                    <td>Artist</td>
-                                    <td>{{ releaseInfo.artists|map(a => a.name|clean_artist_name)|join(', ') }}</td>
-                                </tr>
+                                {% if releaseInfo.artists is defined and releaseInfo.artists %}
+                                    <tr>
+                                        <th scope="row"><i class="fa-fw fa-solid fa-people-group"></i></th>
+                                        <td>Artist</td>
+                                        <td>{{ releaseInfo.artists|map(a => a.name|clean_artist_name)|join(', ') }}</td>
+                                    </tr>
+                                {% endif %}
                                 <tr>
                                     <th scope="row"><i class="fa-fw fa-solid fa-calendar-days"></i></th>
                                     <td>Released</td>
                                     <td>{{ releaseInfo.released|default('?') }}</td>
                                 </tr>
-                                {% if releaseInfo.series %}
+                                {% if releaseInfo.series is defined and releaseInfo.series %}
                                     <tr>
                                         <th scope="row"><i class="fa-fw fa-solid fa-calendar-days"></i></th>
                                         <td>Series</td>
-                                        <td>{{ releaseInfo.series[0].name }}</td>
+                                        <td>{{ releaseInfo.series[0].name|default('Unknown Series') }}</td>
                                     </tr>
                                 {% endif %}
-                                {% if releaseInfo.labels %}
+                                {% if releaseInfo.labels is defined and releaseInfo.labels %}
                                     <tr>
                                         <th scope="row"><i class="fa-fw fa-solid fa-building"></i></th>
                                         <td>Label</td>
                                         <td>
                                             {% for label in releaseInfo.labels %}
-                                                {{ label.name }}{% if label.catno %}, {{ label.catno }}{% endif %}
+                                                {{ label.name|default('Unknown Label') }}{% if label.catno %}, {{ label.catno }}{% endif %}
                                                 {% if not loop.last %}<br>{% endif %}
                                             {% endfor %}
                                         </td>
                                     </tr>
                                 {% endif %}
-                                {% if releaseInfo.formats %}
+                                {% if releaseInfo.formats is defined and releaseInfo.formats %}
                                     <tr>
                                         <th scope="row"><i class="fa-fw fa-solid fa-compact-disc"></i></th>
                                         <td>Format</td>
                                         <td>
                                             {% for format in releaseInfo.formats %}
-                                                {% if format.qty > 1 %}{{ format.qty }} x {% endif %}
-                                                <b>{{ format.name }}</b>
+                                                {% if format.qty|default(1) > 1 %}{{ format.qty }} x {% endif %}
+                                                <b>{{ format.name|default('Unknown Format') }}</b>
                                                 {% if format.descriptions %}, {{ format.descriptions|join(', ') }}{% endif %}
                                                 {% if format.text %}, <i>{{ format.text }}</i>{% endif %}
                                                 <br>
@@ -85,14 +87,14 @@
                                         </td>
                                     </tr>
                                 {% endif %}
-                                {% if releaseInfo.genres %}
+                                {% if releaseInfo.genres is defined and releaseInfo.genres %}
                                     <tr>
                                         <th scope="row"><i class="fa-fw fa-solid fa-bars-staggered"></i></th>
                                         <td>Genres</td>
                                         <td>{{ releaseInfo.genres|join(', ') }}</td>
                                     </tr>
                                 {% endif %}
-                                {% if releaseInfo.styles %}
+                                {% if releaseInfo.styles is defined and releaseInfo.styles %}
                                     <tr>
                                         <th scope="row"><i class="fa-fw fa-solid fa-bars-staggered"></i></th>
                                         <td>Styles</td>
@@ -100,7 +102,7 @@
                                     </tr>
                                 {% endif %}
 
-                                {% if myReleaseInfo.releases[0].notes %}
+                                {% if myReleaseInfo.releases is defined and myReleaseInfo.releases[0].notes is defined %}
                                     {% for note in myReleaseInfo.releases[0].notes %}
                                         <tr>
                                             <th>
@@ -133,7 +135,7 @@
     <div class="col-xl-8 col-lg-6 col-md-6 mb-4">
         <div class="bg-white rounded shadow-sm">
             <div class="accordion" id="accordionExample">
-                {% if releaseInfo.notes %}
+                {% if releaseInfo.notes is defined and releaseInfo.notes %}
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotes" aria-expanded="true">
@@ -150,7 +152,7 @@
                     </div>
                 {% endif %}
 
-                {% if releaseInfo.tracklist %}
+                {% if releaseInfo.tracklist is defined and releaseInfo.tracklist %}
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTracklist" aria-expanded="true">
@@ -167,18 +169,18 @@
                                     </tr>
                                     {% for track in releaseInfo.tracklist %}
                                         <tr>
-                                            <th data-align="left" style="width:1%">{{ track.position }}:  </th>
+                                            <th data-align="left" style="width:1%">{{ track.position|default('?') }}:  </th>
                                             <td data-align="left">
-                                                {{ track.title }}
-                                                {% if track.extraartists %}
+                                                {{ track.title|default('Unknown Track') }}
+                                                {% if track.extraartists is defined and track.extraartists %}
                                                     <br>
                                                     {% for artist in track.extraartists %}
-                                                        {{ artist.role }} <strong>{{ artist.name|clean_artist_name }}</strong>
+                                                        {{ artist.role|default('') }} <strong>{{ artist.name|clean_artist_name }}</strong>
                                                         {%- if not loop.last %}, {% endif %}
                                                     {% endfor %}
                                                 {% endif %}
                                             </td>
-                                            <td data-align="left" style="width:1%">{{ track.duration }}</td>
+                                            <td data-align="left" style="width:1%">{{ track.duration|default('-:--') }}</td>
                                         </tr>
                                     {% endfor %}
                                 </table>
@@ -187,7 +189,7 @@
                     </div>
                 {% endif %}
 
-                {% if releaseInfo.extraartists %}
+                {% if releaseInfo.extraartists is defined and releaseInfo.extraartists %}
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCredits">
@@ -199,7 +201,7 @@
                                 <ul class="list-group list-group-flush">
                                     {% for artist in releaseInfo.extraartists %}
                                         <li class="list-group-item">
-                                            <strong>{{ artist.role }}:</strong> 
+                                            <strong>{{ artist.role|default('Unknown Role') }}:</strong> 
                                             {{ artist.name|clean_artist_name }}
                                             {% if artist.tracks %} ({{ artist.tracks }}){% endif %}
                                         </li>
@@ -210,7 +212,7 @@
                     </div>
                 {% endif %}
 
-                {% if releaseInfo.companies %}
+                {% if releaseInfo.companies is defined and releaseInfo.companies %}
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCompanies">
@@ -222,8 +224,8 @@
                                 <ul class="list-group list-group-flush">
                                     {% for company in releaseInfo.companies %}
                                         <li class="list-group-item">
-                                            <strong>{{ company.entity_type_name }}</strong> 
-                                            {{ company.name }}
+                                            <strong>{{ company.entity_type_name|default('Unknown Type') }}</strong> 
+                                            {{ company.name|default('Unknown Company') }}
                                         </li>
                                     {% endfor %}
                                 </ul>
@@ -232,7 +234,7 @@
                     </div>
                 {% endif %}
 
-                {% if releaseInfo.identifiers %}
+                {% if releaseInfo.identifiers is defined and releaseInfo.identifiers %}
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdentifiers">
@@ -244,8 +246,8 @@
                                 <table class="table table-striped">
                                     {% for identifier in releaseInfo.identifiers %}
                                         <tr>
-                                            <td data-align="left">{{ identifier.type }}</td>
-                                            <td>{{ identifier.value }}</td>
+                                            <td data-align="left">{{ identifier.type|default('Unknown Type') }}</td>
+                                            <td>{{ identifier.value|default('') }}</td>
                                             <td>{{ identifier.description|default('') }}</td>
                                         </tr>
                                     {% endfor %}

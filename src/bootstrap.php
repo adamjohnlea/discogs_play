@@ -10,6 +10,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Load configuration
 $config = require __DIR__ . '/../config/config.php';
 
+// Include database services
+require_once __DIR__ . '/Database/Migration.php';
+require_once __DIR__ . '/Services/DatabaseService.php';
+require_once __DIR__ . '/Services/CacheService.php';
+
 // Include core files
 require_once __DIR__ . '/Router.php';
 require_once __DIR__ . '/TwigConfig.php';

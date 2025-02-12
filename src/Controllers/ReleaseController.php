@@ -4,12 +4,14 @@ class ReleaseController {
     private $config;
     private $twig;
     private $urlService;
+    private $cacheService;
 
     public function __construct($config) {
         $this->config = $config;
         $this->twig = TwigConfig::getInstance($config);
         require_once __DIR__ . '/../Services/UrlService.php';
         $this->urlService = new UrlService($config);
+        $this->cacheService = new CacheService($config);
     }
 
     public function handleRequest() {
@@ -28,25 +30,55 @@ class ReleaseController {
             header("Location: /");
             exit;
         }
-        
-        $releaseInfo = get_release_information($release_id);
-        if (!$releaseInfo) {
-            return $this->twig->render('error.html.twig', [
-                'error' => '404 Not Found'
-            ]);
+
+        $releaseInfo = null;
+        $myReleaseInfo = null;
+        $cacheStatus = [];
+
+        // Check cache first
+        $cachedData = $this->cacheService->getCachedRelease($release_id);
+        if ($cachedData && $this->cacheService->isReleaseCacheValid($release_id)) {
+            $releaseInfo = $cachedData['data'];
+            $myReleaseInfo = $cachedData['my_data'];
+            $cacheStatus['release'] = 'Using stored data';
+            $cacheStatus['cache_time'] = $cachedData['last_updated'];
+        } else {
+            // If not in cache or cache is invalid, fetch from API
+            $cacheStatus['release'] = 'Fetching and storing new data';
+            $releaseInfo = get_release_information($release_id);
+            if (!$releaseInfo) {
+                return $this->twig->render('error.html.twig', [
+                    'error' => '404 Not Found'
+                ]);
+            }
+            
+            $myReleaseInfo = get_my_release_information($release_id);
+            
+            // Store the data permanently
+            $this->cacheService->cacheRelease($release_id, $releaseInfo, $myReleaseInfo);
         }
-        
-        $myReleaseInfo = get_my_release_information($release_id);
-        
+
         // Get global variables from utils.php
         global $DISCOGS_USERNAME;
+
+        // Check image cache status
+        if (isset($releaseInfo['images'][0])) {
+            $firstImage = $releaseInfo['images'][0];
+            $cachedImage = $this->cacheService->getCachedImage($release_id, 'cover', $firstImage['resource_url']);
+            if ($cachedImage) {
+                $cacheStatus['cover_image'] = 'Using stored image';
+                $cacheStatus['image_cache_time'] = $cachedImage['last_updated'];
+            } else {
+                $cacheStatus['cover_image'] = 'Storing new image';
+            }
+        }
         
         return $this->twig->render('release.html.twig', [
             'releaseInfo' => $releaseInfo,
             'myReleaseInfo' => $myReleaseInfo,
             'release_id' => $release_id,
             'discogs_username' => $DISCOGS_USERNAME,
-            'current_folder_name' => null, // These are needed for the banner template
+            'current_folder_name' => null,
             'current_folder_count' => null,
             'sort_by' => null,
             'order' => null

@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+$cacheService = new CacheService($config);
+if ($cacheService->clearCache()) {
+    echo "Cache cleared successfully.\n";
+} else {
+    echo "Failed to clear cache.\n";
+    exit(1);
+} 

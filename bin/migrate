@@ -1,0 +1,52 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+// Load all migration files
+foreach (glob(__DIR__ . '/../src/Database/Migrations/*.php') as $file) {
+    require_once $file;
+}
+
+$db = DatabaseService::getInstance($config)->getConnection();
+$migration = new Migration($db);
+
+// Register migrations
+Migration::register(new CreateCacheTablesV1($db));
+
+$command = $argv[1] ?? 'help';
+
+switch ($command) {
+    case 'migrate':
+        $migrations = $migration->migrate();
+        if (empty($migrations)) {
+            echo "No new migrations to run.\n";
+        } else {
+            echo "Ran migrations:\n";
+            foreach ($migrations as $m) {
+                echo "- $m\n";
+            }
+        }
+        break;
+        
+    case 'rollback':
+        $migrations = $migration->rollback();
+        if (empty($migrations)) {
+            echo "No migrations to roll back.\n";
+        } else {
+            echo "Rolled back migrations:\n";
+            foreach ($migrations as $m) {
+                echo "- $m\n";
+            }
+        }
+        break;
+        
+    case 'help':
+    default:
+        echo "Usage: php migrate [command]\n";
+        echo "Commands:\n";
+        echo "  migrate   Run all pending migrations\n";
+        echo "  rollback  Rollback the last batch of migrations\n";
+        echo "  help     Show this help message\n";
+        break;
+} 

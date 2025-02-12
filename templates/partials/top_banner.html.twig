@@ -20,10 +20,12 @@
                     </p>
                 {% endif %}
             {% else %}
-                {% if releaseInfo is defined %}
+                {% if releaseInfo is defined and releaseInfo %}
                     <h2 class="display-6">
                         "{{ releaseInfo.title }}"
-                        by {{ releaseInfo.artists|map(a => a.name|clean_artist_name)|join(', ') }}
+                        {% if releaseInfo.artists is defined and releaseInfo.artists %}
+                            by {{ releaseInfo.artists|map(a => a.name|clean_artist_name)|join(', ') }}
+                        {% endif %}
                     </h2>
                 {% endif %}
             {% endif %}

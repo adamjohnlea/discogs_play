@@ -1,26 +1,76 @@
 <?php
+
+require_once __DIR__ . '/../Services/LogService.php';
+
 function get_release_information($release_id) {
-    global $DISCOGS_API_URL, $DISCOGS_USERNAME, $DISCOGS_TOKEN, $context;
+    global $config;
+    $logger = LogService::getInstance($config);
     
     if (!$release_id) {
+        $logger->error("No release ID provided");
         return null;
     }
 
     try {
-        // PULL DISCOGS REGARDING THE RELEASE IN MY COLLECTION
-        $releasejson = $DISCOGS_API_URL . "/releases/" . $release_id;
+        // Build the API URL
+        $url = $config['discogs']['api_url'] . "/releases/" . $release_id;
+        $logger->info("Fetching release from Discogs API", ['url' => $url]);
         
-        // put the contents of the JSON into a variable
-        $releasedata = @file_get_contents($releasejson, false, $context);
+        // Set up the request context with authentication and user agent
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => [
+                    'User-Agent: ' . $config['discogs']['user_agent'],
+                    'Authorization: Discogs token=' . $config['discogs']['token']
+                ]
+            ]
+        ];
         
-        if ($releasedata === false) {
+        $context = stream_context_create($opts);
+        
+        // Make the API request
+        $response = @file_get_contents($url, false, $context);
+        
+        if ($response === false) {
+            $logger->error("Failed to fetch release from Discogs API", [
+                'release_id' => $release_id,
+                'url' => $url,
+                'context' => $opts
+            ]);
             return null;
         }
         
-        // decode the JSON feed
-        $data = json_decode($releasedata, true);
-        return $data ?: null;
+        // Log the raw response for debugging
+        $logger->debug("Received API response", [
+            'release_id' => $release_id,
+            'response_preview' => substr($response, 0, 1000) . '...'
+        ]);
+        
+        // Parse the JSON response
+        $data = json_decode($response, true);
+        
+        if (!$data) {
+            $logger->error("Failed to parse JSON response", [
+                'release_id' => $release_id,
+                'json_error' => json_last_error_msg()
+            ]);
+            return null;
+        }
+        
+        // Log the parsed data structure
+        $logger->debug("Parsed release data structure", [
+            'release_id' => $release_id,
+            'keys' => array_keys($data)
+        ]);
+        
+        return $data;
     } catch (Exception $e) {
+        $logger->error("Exception while fetching release", [
+            'release_id' => $release_id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
         return null;
     }
 }

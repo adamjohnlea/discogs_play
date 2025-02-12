@@ -1,26 +1,47 @@
 <?php
 function get_my_release_information($release_id) {
-    global $DISCOGS_API_URL, $DISCOGS_USERNAME, $DISCOGS_TOKEN, $context;
+    global $config;
     
     if (!$release_id) {
         return null;
     }
 
     try {
-        // build the API request URL
-        $myreleasejson = $DISCOGS_API_URL . "/users/" . $DISCOGS_USERNAME . "/collection/releases/" . $release_id;
+        // Build the API URL for user's collection
+        $url = $config['discogs']['api_url'] . "/users/" . $config['discogs']['username'] . "/collection/releases/" . $release_id;
         
-        // put the contents of the JSON into a variable
-        $myreleasedata = @file_get_contents($myreleasejson, false, $context);
+        // Set up the request context with authentication and user agent
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => [
+                    'User-Agent: ' . $config['discogs']['user_agent'],
+                    'Authorization: Discogs token=' . $config['discogs']['token']
+                ]
+            ]
+        ];
         
-        if ($myreleasedata === false) {
+        $context = stream_context_create($opts);
+        
+        // Make the API request
+        $response = @file_get_contents($url, false, $context);
+        
+        if ($response === false) {
+            error_log("Failed to fetch user's release $release_id from Discogs API");
             return null;
         }
         
-        // decode the JSON feed
-        $data = json_decode($myreleasedata, true);
-        return $data ?: null;
+        // Parse the JSON response
+        $data = json_decode($response, true);
+        
+        if (!$data) {
+            error_log("Failed to parse JSON response for user's release $release_id");
+            return null;
+        }
+        
+        return $data;
     } catch (Exception $e) {
+        error_log("Error fetching user's release $release_id: " . $e->getMessage());
         return null;
     }
 }
