@@ -16,8 +16,8 @@ require_once __DIR__ . '/TwigConfig.php';
 require_once __DIR__ . '/Controllers/ReleaseController.php';
 
 // Include utility functions
-require_once __DIR__ . '/../utils/utils.php';
-require_once __DIR__ . '/../funcs.php';
+require_once __DIR__ . '/Utils/utils.php';
+require_once __DIR__ . '/Functions/funcs.php';
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {

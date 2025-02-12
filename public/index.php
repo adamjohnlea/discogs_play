@@ -28,19 +28,4 @@ if (isset($result['error'])) {
 // If the result is a string (Twig template output), echo it directly
 if (is_string($result)) {
     echo $result;
-} else {
-    // For backward compatibility, handle array responses
-    if (isset($result['releaseInfo'])) {
-        $releaseinfo = $result['releaseInfo'];
-        $myreleaseinfo = $result['myReleaseInfo'];
-    } else {
-        $collection = $result;
-    }
-
-    // Include views (legacy support)
-    include __DIR__ . '/../views/header.php';
-    include __DIR__ . '/../views/top_banner.php';
-    include __DIR__ . '/../views/top_nav_filter_bar.php';
-    include __DIR__ . '/../views/release_gallery.php';
-    include __DIR__ . '/../views/footer.php';
-} 
+}
