@@ -11,6 +11,12 @@ return function($router) {
     $router->add('/register', ['AuthController', 'register'], 'POST');
     $router->add('/login', ['AuthController', 'login'], 'POST');
     
+    // Profile routes
+    $router->add('/profile', ['ProfileController', 'show']);
+    $router->add('/profile/password', ['ProfileController', 'updatePassword'], 'POST');
+    $router->add('/profile/email', ['ProfileController', 'updateEmail'], 'POST');
+    $router->add('/profile/delete', ['ProfileController', 'deleteAccount'], 'POST');
+    
     // Settings routes
     $router->add('/settings', ['SettingsController', 'show']);
     $router->add('/settings', ['SettingsController', 'update'], 'POST');

@@ -88,6 +88,15 @@ class TwigConfig {
             
             return trim($text);
         }));
+
+        // Add extensions and functions
+        if ($config['app']['environment'] === 'development') {
+            $this->twig->addExtension(new \Twig\Extension\DebugExtension());
+        }
+        
+        // Add custom extensions
+        require_once __DIR__ . '/TwigExtensions/AuthExtension.php';
+        $this->twig->addExtension(new AuthExtension($config));
     }
 
     public static function getInstance($config = null) {

@@ -1,0 +1,187 @@
+{% extends "layouts/base.html.twig" %}
+
+{% block title %}Profile - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <!-- Profile Overview -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Profile Overview</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fa-solid fa-user fa-3x text-primary me-3"></i>
+                        <div>
+                            <h5 class="mb-0">{{ user.username }}</h5>
+                            <small class="text-muted">Member since {{ user.created_at|date('M d, Y') }}</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6>Email</h6>
+                        <p class="mb-0">{{ user.email }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Discogs Username</h6>
+                        <p class="mb-0">{{ user.discogs_username ?: 'Not connected' }}</p>
+                    </div>
+                    
+                    <div>
+                        <h6>Last Updated</h6>
+                        <p class="mb-0">{{ user.updated_at|date('M d, Y H:i') }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if stats %}
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Collection Stats</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h3 class="text-primary">{{ stats.total_items }}</h3>
+                            <small class="text-muted">Total Records</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-primary">{{ stats.folder_count }}</h3>
+                            <small class="text-muted">Folders</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6>Folders</h6>
+                    <ul class="list-unstyled mb-0">
+                        {% for folder in stats.folders %}
+                            {% if folder.count > 0 %}
+                                <li class="mb-2">
+                                    <i class="fa-solid fa-folder text-warning me-2"></i>
+                                    {{ folder.name }}
+                                    <span class="badge bg-secondary float-end">{{ folder.count }}</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Settings -->
+        <div class="col-md-8">
+            {% if profile_success %}
+                <div class="alert alert-success">
+                    {{ profile_success }}
+                </div>
+            {% endif %}
+
+            {% if profile_error %}
+                <div class="alert alert-danger">
+                    {{ profile_error }}
+                </div>
+            {% endif %}
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Change Password</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/profile/password">
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Update Email</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/profile/email">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">New Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Update Email</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Danger Zone</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Delete Account</h5>
+                    <p>Once you delete your account, there is no going back. Please be certain.</p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                <form method="POST" action="/profile/delete" id="deleteAccountForm">
+                    <div class="mb-3">
+                        <label for="confirm_deletion" class="form-label">Type "DELETE" to confirm</label>
+                        <input type="text" class="form-control" id="confirm_deletion" name="confirm_deletion" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="deleteAccountForm" class="btn btn-danger" disabled id="confirmDeleteBtn">Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmInput = document.getElementById('confirm_deletion');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    confirmInput.addEventListener('input', function() {
+        confirmBtn.disabled = this.value !== 'DELETE';
+    });
+});
+</script>
+{% endblock %} 

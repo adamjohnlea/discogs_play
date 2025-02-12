@@ -62,6 +62,20 @@
             aspect-ratio: 1/1;
             padding: 1rem;
         }
+        .dropdown-menu {
+            background-color: #2b3035;
+            border-color: rgba(255,255,255,.125);
+        }
+        .dropdown-item {
+            color: #dee2e6;
+        }
+        .dropdown-item:hover {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .dropdown-divider {
+            border-color: rgba(255,255,255,.125);
+        }
     </style>
     {% block stylesheets %}{% endblock %}
 </head>
@@ -69,6 +83,23 @@
     <div class="container-fluid">
         {% block banner %}
             {% include 'partials/top_banner.html.twig' %}
+            
+            {% if is_granted('ROLE_USER') %}
+                <div class="d-flex justify-content-end p-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-user"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                            <li><a class="dropdown-item" href="/"><i class="fa-solid fa-house me-2"></i>Home</a></li>
+                            <li><a class="dropdown-item" href="/profile"><i class="fa-solid fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="/settings"><i class="fa-solid fa-gear me-2"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
         {% endblock %}
 
         {% if collection is defined %}

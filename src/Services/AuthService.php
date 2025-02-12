@@ -60,6 +60,40 @@ class AuthService {
         return $errors;
     }
     
+    public function verifyPassword($password, $hash) {
+        return $this->user->verifyPassword($password, $hash);
+    }
+    
+    public function validatePassword($newPassword, $confirmPassword) {
+        $errors = [];
+        
+        if (empty($newPassword)) {
+            $errors[] = 'Password is required';
+        } else {
+            if (strlen($newPassword) < 8) {
+                $errors[] = 'Password must be at least 8 characters';
+            }
+            if (!preg_match('/[A-Z]/', $newPassword)) {
+                $errors[] = 'Password must contain at least one uppercase letter';
+            }
+            if (!preg_match('/[a-z]/', $newPassword)) {
+                $errors[] = 'Password must contain at least one lowercase letter';
+            }
+            if (!preg_match('/[0-9]/', $newPassword)) {
+                $errors[] = 'Password must contain at least one number';
+            }
+            if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $newPassword)) {
+                $errors[] = 'Password must contain at least one symbol';
+            }
+        }
+        
+        if ($newPassword !== $confirmPassword) {
+            $errors[] = 'Passwords do not match';
+        }
+        
+        return $errors;
+    }
+    
     public function register($username, $email, $password) {
         try {
             $this->db->beginTransaction();
