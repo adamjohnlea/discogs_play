@@ -52,15 +52,18 @@
             border-radius: 50%;
             padding: 1.5rem;
         }
+        .card-img-top {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            aspect-ratio: 1/1;
+            padding: 1rem;
+        }
     </style>
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
     <div class="container-fluid">
-        {% block header %}
-            {% include 'partials/header.html.twig' %}
-        {% endblock %}
-
         {% block banner %}
             {% include 'partials/top_banner.html.twig' %}
         {% endblock %}
