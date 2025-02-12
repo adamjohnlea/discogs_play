@@ -37,8 +37,8 @@ class TwigConfig {
         }));
 
         // Add URL generation functions
-        $this->twig->addFunction(new \Twig\TwigFunction('release_url', function ($id) use ($urlService) {
-            return $urlService->release($id);
+        $this->twig->addFunction(new \Twig\TwigFunction('release_url', function ($id, $releaseInfo = null) use ($urlService) {
+            return $urlService->release($id, $releaseInfo);
         }));
 
         $this->twig->addFunction(new \Twig\TwigFunction('folder_url', function ($id, $name = null) use ($urlService) {

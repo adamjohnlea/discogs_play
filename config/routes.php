@@ -1,7 +1,8 @@
 <?php
 
 return function($router) {
-    // Release view
+    // Release view - support both formats
+    $router->add('/release/:id/:artist/:title', ['ReleaseController', 'showRelease']);
     $router->add('/release/:id', ['ReleaseController', 'showRelease']);
     
     // Collection view with clean URLs for folder, sorting, and pagination

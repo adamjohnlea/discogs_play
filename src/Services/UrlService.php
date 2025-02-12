@@ -13,8 +13,15 @@ class UrlService {
     /**
      * Generate a URL for a release
      */
-    public function release($id) {
-        return "/release/{$id}";
+    public function release($id, $releaseInfo = null) {
+        if (!$releaseInfo) {
+            return "/release/{$id}";
+        }
+
+        $artist = $this->slugify($releaseInfo['artists'][0]['name']);
+        $title = $this->slugify($releaseInfo['title']);
+        
+        return "/release/{$id}/{$artist}/{$title}";
     }
 
     /**
@@ -48,6 +55,28 @@ class UrlService {
         $direction = $currentParams['order'] ?? 'desc';
         
         return "/folder/{$folder}/sort/{$field}/{$direction}/page/{$number}";
+    }
+
+    /**
+     * Convert a string to a URL-friendly slug
+     */
+    private function slugify($text) {
+        // Convert to lowercase
+        $text = strtolower($text);
+        
+        // Replace non letter or digits by -
+        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+        
+        // Remove unwanted characters
+        $text = preg_replace('~[^-\w]+~', '', $text);
+        
+        // Trim
+        $text = trim($text, '-');
+        
+        // Remove duplicate -
+        $text = preg_replace('~-+~', '-', $text);
+        
+        return $text;
     }
 
     /**
