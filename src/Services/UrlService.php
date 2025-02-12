@@ -36,8 +36,20 @@ class UrlService {
      * Generate a URL for collection with sorting
      */
     public function sort($field, $direction, $currentParams = []) {
-        $folder = isset($currentParams['folder_id']) ? 
-            $this->folderService->getFolderSlug($currentParams['folder_id']) : 'all';
+        global $folders;
+        
+        $folder = 'all';
+        if (isset($currentParams['folder_id']) && $currentParams['folder_id'] !== '0') {
+            // Look up the folder name from the global folders data
+            if (isset($folders['folders']) && is_array($folders['folders'])) {
+                foreach ($folders['folders'] as $f) {
+                    if ($f['id'] == $currentParams['folder_id']) {
+                        $folder = $this->folderService->getFolderSlug($currentParams['folder_id'], $f['name']);
+                        break;
+                    }
+                }
+            }
+        }
         
         $page = isset($currentParams['page']) ? $currentParams['page'] : 1;
         

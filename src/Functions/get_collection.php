@@ -17,8 +17,52 @@ function get_collection() {
         . $per_page
         . "&token="
         . $DISCOGS_TOKEN;
-    // put the contents of the JSON into a variable
-    $pagedata = file_get_contents($pagejson, false, $context);
-    // decode the JSON feed
-    return json_decode($pagedata,true);
+
+    try {
+        // put the contents of the JSON into a variable
+        $pagedata = @file_get_contents($pagejson, false, $context);
+        
+        if ($pagedata === false) {
+            $error = error_get_last();
+            error_log("Discogs API Error: " . ($error['message'] ?? 'Unknown error'));
+            
+            // Check if we got rate limited
+            $headers = get_headers($pagejson, 1);
+            if (isset($headers[0]) && strpos($headers[0], '429') !== false) {
+                error_log("Rate limited by Discogs API");
+                return [
+                    'error' => 'Rate limit exceeded. Please try again in a moment.',
+                    'releases' => [],
+                    'pagination' => ['pages' => 1]
+                ];
+            }
+            
+            // For other errors (like 502 Bad Gateway)
+            return [
+                'error' => 'Temporarily unable to fetch collection. Please try again.',
+                'releases' => [],
+                'pagination' => ['pages' => 1]
+            ];
+        }
+
+        // decode the JSON feed
+        $data = json_decode($pagedata, true);
+        if ($data === null) {
+            error_log("Failed to parse JSON response from Discogs API");
+            return [
+                'error' => 'Invalid response from Discogs. Please try again.',
+                'releases' => [],
+                'pagination' => ['pages' => 1]
+            ];
+        }
+
+        return $data;
+    } catch (Exception $e) {
+        error_log("Exception in get_collection: " . $e->getMessage());
+        return [
+            'error' => 'An error occurred. Please try again.',
+            'releases' => [],
+            'pagination' => ['pages' => 1]
+        ];
+    }
 }

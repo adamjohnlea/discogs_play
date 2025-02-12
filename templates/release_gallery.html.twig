@@ -4,6 +4,14 @@
 
 {% block content %}
 <div class="row">
+    {% if collection.error is defined and collection.error %}
+        <div class="col-12">
+            <div class="alert alert-warning" role="alert">
+                {{ collection.error }}
+            </div>
+        </div>
+    {% endif %}
+
     {% for item in collection.releases %}
         <!-- Gallery item -->
         <div class="col-xl-3 col-md-6 col-sm-6 my-3">
@@ -39,9 +47,11 @@
         </div>
         <!-- End gallery Item -->
     {% else %}
-        <div class="col-12">
-            <p class="text-center">No releases found in your collection.</p>
-        </div>
+        {% if not collection.error %}
+            <div class="col-12">
+                <p class="text-center">No releases found in your collection.</p>
+            </div>
+        {% endif %}
     {% endfor %}
 </div>
 {% endblock %} 
