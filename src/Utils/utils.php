@@ -64,21 +64,13 @@ function get_folders() {
     
     require_once __DIR__ . '/../Services/DiscogsService.php';
     require_once __DIR__ . '/../Services/CacheService.php';
-    require_once __DIR__ . '/../Services/LogService.php';
-    
     $discogsService = new DiscogsService($config);
     $cacheService = new CacheService($config);
-    $logger = LogService::getInstance($config);
     
     try {
         // Check cache first
         $cachedFolders = $cacheService->getCachedFolders($_SESSION['user_id']);
         if ($cachedFolders && $cacheService->isFoldersCacheValid($_SESSION['user_id'])) {
-            $logger->info("Using cached folders", [
-                'user_id' => $_SESSION['user_id'],
-                'cached_at' => $cachedFolders['last_updated'],
-                'cache_age' => time() - strtotime($cachedFolders['last_updated'])
-            ]);
             return $cachedFolders['data'];
         }
         
@@ -86,14 +78,8 @@ function get_folders() {
         $url = $discogsService->buildUrl('/users/:username/collection/folders', $_SESSION['user_id']);
         $context = $discogsService->getApiContext($_SESSION['user_id']);
         
-        $logger->info("Fetching folders from Discogs", [
-            'user_id' => $_SESSION['user_id'],
-            'url' => $url
-        ]);
-        
         $folderdata = @file_get_contents($url, false, $context);
         if ($folderdata === false) {
-            $logger->error("Failed to fetch folders from Discogs");
             return ['folders' => []];
         }
         
@@ -104,10 +90,7 @@ function get_folders() {
         
         return $data;
     } catch (Exception $e) {
-        $logger->error("Error getting folders", [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
+        error_log("Error getting folders: " . $e->getMessage());
         return ['folders' => []];
     }
 }

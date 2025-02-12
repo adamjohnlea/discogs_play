@@ -12,10 +12,8 @@ function get_collection() {
     
     require_once __DIR__ . '/../Services/DiscogsService.php';
     require_once __DIR__ . '/../Services/CacheService.php';
-    require_once __DIR__ . '/../Services/LogService.php';
     $discogsService = new DiscogsService($config);
     $cacheService = new CacheService($config);
-    $logger = LogService::getInstance($config);
     
     try {
         // Check if we have a cached collection list for this combination
@@ -23,15 +21,6 @@ function get_collection() {
         $cachedCollection = $cacheService->getCachedCollection($cacheKey);
         
         if ($cachedCollection && $cacheService->isCollectionCacheValid($cacheKey)) {
-            $logger->info("Using cached collection list", [
-                'folder_id' => $folder_id,
-                'page' => $page,
-                'sort_by' => $sort_by,
-                'order' => $order,
-                'cache_key' => $cacheKey,
-                'cached_releases' => count($cachedCollection['releases']),
-                'cache_age' => time() - strtotime($cachedCollection['last_updated'] ?? 'now')
-            ]);
             return $cachedCollection;
         }
         
@@ -44,29 +33,13 @@ function get_collection() {
         // Add query parameters
         $url .= "?sort={$sort_by}&sort_order={$order}&page={$page}&per_page={$per_page}";
         
-        $logger->info("Fetching collection from Discogs", [
-            'folder_id' => $folder_id,
-            'page' => $page,
-            'sort_by' => $sort_by,
-            'order' => $order,
-            'url' => $url,
-            'reason' => !$cachedCollection ? 'No cache entry' : 'Cache expired'
-        ]);
-        
         $context = $discogsService->getApiContext($_SESSION['user_id']);
         $pagedata = @file_get_contents($url, false, $context);
         
         if ($pagedata === false) {
-            $error = error_get_last();
-            $logger->error("Discogs API Error", [
-                'error' => $error['message'] ?? 'Unknown error',
-                'url' => $url
-            ]);
-            
             // Check if we got rate limited
             $headers = get_headers($url, 1);
             if (isset($headers[0]) && strpos($headers[0], '429') !== false) {
-                $logger->error("Rate limited by Discogs API");
                 return [
                     'error' => 'Rate limit exceeded. Please try again in a moment.',
                     'releases' => [],
@@ -85,7 +58,6 @@ function get_collection() {
         // decode the JSON feed
         $data = json_decode($pagedata, true);
         if ($data === null) {
-            $logger->error("Failed to parse JSON response from Discogs API");
             return [
                 'error' => 'Invalid response from Discogs. Please try again.',
                 'releases' => [],
@@ -102,13 +74,6 @@ function get_collection() {
             
             if ($cachedData && $cacheService->isReleaseCacheValid($releaseId, true)) {
                 $cacheStats['cached']++;
-                $logger->debug("Using cached data for release", [
-                    'release_id' => $releaseId,
-                    'title' => $cachedData['data']['title'],
-                    'is_basic_data' => $cachedData['is_basic_data'],
-                    'cache_age' => time() - strtotime($cachedData['last_updated']),
-                    'data_keys' => array_keys($cachedData['data'])
-                ]);
                 
                 // Keep the collection-specific data
                 $collectionData = [
@@ -138,12 +103,6 @@ function get_collection() {
                 }
             } else {
                 $cacheStats['uncached']++;
-                $logger->debug("Caching new release data", [
-                    'release_id' => $releaseId,
-                    'title' => $release['basic_information']['title'],
-                    'data_keys' => array_keys($release['basic_information']),
-                    'reason' => !$cachedData ? 'No cache entry' : 'Invalid cache'
-                ]);
                 
                 // Cache the basic info with the basic data flag
                 $cacheService->cacheRelease($releaseId, $release['basic_information'], null, true);
@@ -152,24 +111,10 @@ function get_collection() {
         
         // Cache the collection list
         $cacheService->cacheCollection($cacheKey, $data);
-        
-        $logger->info("Collection cache statistics", [
-            'cached_releases' => $cacheStats['cached'],
-            'uncached_releases' => $cacheStats['uncached'],
-            'total_releases' => count($data['releases']),
-            'page' => $page,
-            'per_page' => $per_page,
-            'folder_id' => $folder_id,
-            'sort_by' => $sort_by,
-            'order' => $order
-        ]);
 
         return $data;
     } catch (Exception $e) {
-        $logger->error("Exception in get_collection", [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
+        error_log("Error in get_collection: " . $e->getMessage());
         return [
             'error' => 'An error occurred. Please try again.',
             'releases' => [],
