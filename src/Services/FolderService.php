@@ -10,6 +10,12 @@ class FolderService {
 
     public function __construct($config) {
         $this->config = $config;
+        
+        // Initialize folder mappings
+        $folders = $this->getFolders();
+        if ($folders && isset($folders['folders'])) {
+            $this->updateFolderMappings($folders['folders']);
+        }
     }
 
     /**
@@ -69,18 +75,45 @@ class FolderService {
      * Convert a string to a URL-friendly slug
      */
     private function slugify($text) {
-        // Replace non letter or digits by -
-        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-        // Transliterate
-        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-        // Remove unwanted characters
-        $text = preg_replace('~[^-\w]+~', '', $text);
-        // Trim
-        $text = trim($text, '-');
-        // Remove duplicate -
-        $text = preg_replace('~-+~', '-', $text);
-        // Lowercase
+        // Convert to lowercase
         $text = strtolower($text);
-        return $text ?: 'n-a';
+        // Replace spaces with hyphens
+        $text = str_replace(' ', '-', $text);
+        // Remove any remaining non-alphanumeric characters except hyphens
+        $text = preg_replace('/[^a-z0-9-]/', '', $text);
+        // Remove multiple consecutive hyphens
+        $text = preg_replace('/-+/', '-', $text);
+        // Remove leading and trailing hyphens
+        $text = trim($text, '-');
+        return $text;
+    }
+
+    /**
+     * Get folders from Discogs API
+     */
+    private function getFolders() {
+        $url = $this->config['discogs']['api_url'] . "/users/" . $this->config['discogs']['username'] . "/collection/folders";
+        
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => [
+                    'User-Agent: ' . $this->config['discogs']['user_agent'],
+                    'Authorization: Discogs token=' . $this->config['discogs']['token']
+                ]
+            ]
+        ];
+        
+        $context = stream_context_create($opts);
+        
+        try {
+            $response = @file_get_contents($url, false, $context);
+            if ($response === false) {
+                return ['folders' => []];
+            }
+            return json_decode($response, true) ?: ['folders' => []];
+        } catch (Exception $e) {
+            return ['folders' => []];
+        }
     }
 } 
