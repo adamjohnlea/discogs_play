@@ -44,7 +44,7 @@
                                 <tr>
                                     <th scope="row"><i class="fa-fw fa-solid fa-people-group"></i></th>
                                     <td>Artist</td>
-                                    <td>{{ releaseInfo.artists|map(a => a.name)|join(', ') }}</td>
+                                    <td>{{ releaseInfo.artists|map(a => a.name|clean_artist_name)|join(', ') }}</td>
                                 </tr>
                                 <tr>
                                     <th scope="row"><i class="fa-fw fa-solid fa-calendar-days"></i></th>
@@ -143,7 +143,7 @@
                         <div id="collapseNotes" class="accordion-collapse collapse show">
                             <div class="accordion-body">
                                 <table class="table table-striped">
-                                    <tr><td>{{ releaseInfo.notes|raw }}</td></tr>
+                                    <tr><td>{{ releaseInfo.notes|clean_notes|raw }}</td></tr>
                                 </table>
                             </div>
                         </div>
@@ -173,7 +173,7 @@
                                                 {% if track.extraartists %}
                                                     <br>
                                                     {% for artist in track.extraartists %}
-                                                        {{ artist.role }} <strong>{{ artist.name }}</strong>
+                                                        {{ artist.role }} <strong>{{ artist.name|clean_artist_name }}</strong>
                                                         {%- if not loop.last %}, {% endif %}
                                                     {% endfor %}
                                                 {% endif %}
@@ -200,7 +200,7 @@
                                     {% for artist in releaseInfo.extraartists %}
                                         <li class="list-group-item">
                                             <strong>{{ artist.role }}:</strong> 
-                                            {{ artist.name }}
+                                            {{ artist.name|clean_artist_name }}
                                             {% if artist.tracks %} ({{ artist.tracks }}){% endif %}
                                         </li>
                                     {% endfor %}

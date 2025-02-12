@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=.8">
-    <title>{% block title %}{% if releaseInfo is defined %}{{ releaseInfo.title }} by {{ releaseInfo.artists[0].name }} | {% endif %}My Discogs Collection{% endblock %}</title>
+    <title>{% block title %}{% if releaseInfo is defined %}{{ releaseInfo.title }} by {{ releaseInfo.artists[0].name|clean_artist_name }} | {% endif %}My Discogs Collection{% endblock %}</title>
     
     <script src="https://kit.fontawesome.com/7e1a0bb728.js" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

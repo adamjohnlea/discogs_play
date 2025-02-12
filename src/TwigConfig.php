@@ -38,6 +38,37 @@ class TwigConfig {
         $this->twig->addFilter(new \Twig\TwigFilter('nl2br', function($text) {
             return nl2br($text);
         }));
+
+        $this->twig->addFilter(new \Twig\TwigFilter('clean_artist_name', function($name) {
+            // Remove the number in parentheses from artist names
+            return preg_replace('/\s*\(\d+\)\s*$/', '', $name);
+        }));
+
+        $this->twig->addFilter(new \Twig\TwigFilter('clean_notes', function($text) {
+            // Convert Discogs URLs to actual links
+            $text = preg_replace('/\[url=([^\]]+)\]([^\[]+)\[\/url\]/', '<a href="$1">$2</a>', $text);
+            
+            // Remove Discogs reference IDs
+            $text = preg_replace('/\[a\d+\]/', '', $text);
+            $text = preg_replace('/\[l\d+\]/', '', $text);
+            
+            // Clean up multiple "appears courtesy of"
+            $text = preg_replace('/(\s*appears courtesy of\s*)+/', ' appears courtesy of ', $text);
+            
+            // Clean up spaces around forward slashes
+            $text = preg_replace('/\s*\/\s*/', '/', $text);
+            
+            // Fix spaces in HTML tags
+            $text = preg_replace('/\s*<\s*\/\s*a\s*>/', '</a>', $text);
+            
+            // Clean up any resulting multiple spaces
+            $text = preg_replace('/\s+/', ' ', $text);
+            
+            // Remove any empty brackets that might be left
+            $text = str_replace('[]', '', $text);
+            
+            return trim($text);
+        }));
     }
 
     public static function getInstance($config = null) {

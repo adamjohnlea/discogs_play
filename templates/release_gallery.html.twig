@@ -22,7 +22,7 @@
                         </h5>
                         <h6 class="card-title">
                             <i class="fa-solid fa-people-group text-muted"></i> 
-                            {{ item.basic_information.artists|map(a => a.name)|join(', ') }}
+                            {{ item.basic_information.artists|map(a => a.name|clean_artist_name)|join(', ') }}
                         </h6>
                     </div>
                 </div>

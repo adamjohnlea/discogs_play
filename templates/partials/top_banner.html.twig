@@ -13,7 +13,7 @@
                     <h2 class="display-6">
                         {% if releaseInfo is defined %}
                             "{{ releaseInfo.title }}"
-                            by {{ releaseInfo.artists|map(a => a.name)|join(', ') }}
+                            by {{ releaseInfo.artists|map(a => a.name|clean_artist_name)|join(', ') }}
                         {% endif %}
                     </h2>
                 {% else %}
