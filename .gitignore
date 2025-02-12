@@ -8,3 +8,5 @@
 !public/img/releases/.gitkeep
 /logs/app.log
 !logs/.gitkeep
+/database/discogs.sqlite
+!database/.gitkeep

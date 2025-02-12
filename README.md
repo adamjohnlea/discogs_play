@@ -38,6 +38,7 @@
     <li>Bootstrap 5 for styling</li>
     <li>Font Awesome icons</li>
     <li>Laravel Herd for local development</li>
+    <li>SQLite for data storage</li>
 </ul>
 
 <h2>Installation</h2>
@@ -47,11 +48,16 @@
         <pre><code>composer install</code></pre>
     </li>
     <li>Copy <code>config/config.example.php</code> to <code>config/config.php</code> and update with your settings</li>
+    <li>Set up the database:
+        <pre><code>./bin/migrate migrate</code></pre>
+    </li>
     <li>Ensure the following directories are writable:
         <ul>
             <li><code>cache/</code></li>
             <li><code>public/img/covers/</code></li>
             <li><code>public/img/releases/</code></li>
+            <li><code>database/</code></li>
+            <li><code>logs/</code></li>
         </ul>
     </li>
 </ol>
@@ -68,6 +74,7 @@
 <pre>
 ├── cache/              # Twig template cache
 ├── config/             # Configuration files
+├── database/           # SQLite database
 ├── public/             # Web root
 │   ├── img/           # Image storage
 │   └── index.php      # Application entry point
@@ -87,6 +94,14 @@
     <li>Configure a new site in Herd pointing to the project's public directory</li>
     <li>Access the site at <code>http://your-site-name.test</code></li>
 </ol>
+
+<h2>Command Line Tools</h2>
+<p>The application includes several useful command-line tools:</p>
+<ul>
+    <li><code>./bin/migrate migrate</code> - Set up or update the database schema</li>
+    <li><code>./bin/clear-cache</code> - Clear the release and image cache</li>
+    <li><code>./bin/view-logs</code> - View application logs (accepts optional line count and filter parameters)</li>
+</ul>
 
 <h2>Credits</h2>
 <p>This application uses the following open-source packages:</p>
