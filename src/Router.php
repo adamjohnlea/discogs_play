@@ -4,24 +4,33 @@ class Router {
     private $routes = [];
     private $config;
     private $folderService;
+    private $twig;
 
     public function __construct($config) {
         $this->config = $config;
         require_once __DIR__ . '/Services/FolderService.php';
         $this->folderService = new FolderService($config);
+        $this->twig = TwigConfig::getInstance($config);
     }
 
-    public function add($path, $callback) {
+    public function add($path, $callback, $method = 'GET') {
         // Convert URL parameters to regex pattern
         $pattern = preg_replace('/\/:([^\/]+)/', '/(?<$1>[^/]+)', $path);
         $pattern = str_replace('/', '\/', $pattern);
         $pattern = '/^' . $pattern . '$/';
         
-        $this->routes[$pattern] = $callback;
+        if (!isset($this->routes[$method])) {
+            $this->routes[$method] = [];
+        }
+        
+        $this->routes[$method][$pattern] = $callback;
         return $this;
     }
 
     public function match($requestUri) {
+        // Get the request method
+        $method = $_SERVER['REQUEST_METHOD'];
+        
         // Parse the URL and remove query string
         $parsedUrl = parse_url($requestUri);
         $path = $parsedUrl['path'];
@@ -38,27 +47,30 @@ class Router {
             parse_str($parsedUrl['query'], $queryParams);
         }
 
-        // First try to match clean URLs
-        foreach ($this->routes as $pattern => $callback) {
-            if (preg_match($pattern, $path, $matches)) {
-                // Remove numeric keys from matches
-                $params = array_filter($matches, function($key) {
-                    return !is_numeric($key);
-                }, ARRAY_FILTER_USE_KEY);
-                
-                // For clean URLs, we'll still need some parameters in a standard format
-                $standardParams = $this->standardizeParams($params, $queryParams);
-                
-                // Set standardized parameters as globals for backward compatibility
-                foreach ($standardParams as $key => $value) {
-                    $GLOBALS[$key] = $value;
+        // Check if we have routes for this method
+        if (isset($this->routes[$method])) {
+            // First try to match clean URLs
+            foreach ($this->routes[$method] as $pattern => $callback) {
+                if (preg_match($pattern, $path, $matches)) {
+                    // Remove numeric keys from matches
+                    $params = array_filter($matches, function($key) {
+                        return !is_numeric($key);
+                    }, ARRAY_FILTER_USE_KEY);
+                    
+                    // For clean URLs, we'll still need some parameters in a standard format
+                    $standardParams = $this->standardizeParams($params, $queryParams);
+                    
+                    // Set standardized parameters as globals for backward compatibility
+                    foreach ($standardParams as $key => $value) {
+                        $GLOBALS[$key] = $value;
+                    }
+                    
+                    return [
+                        'callback' => $callback,
+                        'params' => $params,
+                        'query' => $standardParams
+                    ];
                 }
-                
-                return [
-                    'callback' => $callback,
-                    'params' => $params,
-                    'query' => $standardParams
-                ];
             }
         }
 
@@ -81,56 +93,6 @@ class Router {
         return null;
     }
 
-    private function standardizeParams($params, $queryParams) {
-        $standard = [];
-        
-        // Convert clean URL parameters to standard format
-        if (isset($params['id'])) {
-            $standard['releaseid'] = $params['id'];
-        }
-        if (isset($params['folder'])) {
-            $standard['folder_id'] = $this->folderService->getFolderId($params['folder']);
-        }
-        if (isset($params['page'])) {
-            $standard['page'] = $params['page'];
-        }
-        if (isset($params['field'])) {
-            $standard['sort_by'] = $params['field'];
-        }
-        if (isset($params['direction'])) {
-            $standard['order'] = $params['direction'];
-        }
-        
-        // Set defaults if not provided
-        if (!isset($standard['page'])) {
-            $standard['page'] = '1';
-        }
-        if (!isset($standard['sort_by'])) {
-            $standard['sort_by'] = 'added';
-        }
-        if (!isset($standard['order'])) {
-            $standard['order'] = 'desc';
-        }
-        if (!isset($standard['folder_id'])) {
-            $standard['folder_id'] = '0';
-        }
-        
-        // Merge with any existing query parameters
-        return array_merge($standard, $queryParams);
-    }
-
-    private function determineLegacyCallback($params) {
-        // Default to collection view
-        $callback = ['ReleaseController', 'showCollection'];
-        
-        // If we have a release ID, show the release
-        if (isset($params['releaseid'])) {
-            $callback = ['ReleaseController', 'showRelease'];
-        }
-        
-        return $callback;
-    }
-
     public function dispatch($requestUri) {
         $match = $this->match($requestUri);
         
@@ -140,7 +102,7 @@ class Router {
             
             if (is_array($callback)) {
                 list($controller, $method) = $callback;
-                $controller = new $controller($this->config);
+                $controller = new $controller($this->twig, $this->config);
                 return call_user_func_array([$controller, $method], $params);
             }
             
@@ -150,5 +112,34 @@ class Router {
         // Handle 404
         header("HTTP/1.0 404 Not Found");
         return ['error' => '404 Not Found'];
+    }
+
+    private function standardizeParams($params, $queryParams) {
+        $standardParams = $queryParams;
+        
+        // Convert folder slug to ID if present
+        if (isset($params['folder'])) {
+            $standardParams['folder_id'] = $this->folderService->getFolderId($params['folder']);
+        }
+        
+        // Map sort parameters
+        if (isset($params['field'])) {
+            $standardParams['sort_by'] = $params['field'];
+        }
+        if (isset($params['direction'])) {
+            $standardParams['order'] = $params['direction'];
+        }
+        
+        // Map page parameter
+        if (isset($params['page'])) {
+            $standardParams['page'] = $params['page'];
+        }
+        
+        return $standardParams;
+    }
+
+    private function determineLegacyCallback($queryParams) {
+        // Default to collection view
+        return ['ReleaseController', 'showCollection'];
     }
 } 

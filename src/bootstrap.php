@@ -15,10 +15,18 @@ require_once __DIR__ . '/Database/Migration.php';
 require_once __DIR__ . '/Services/DatabaseService.php';
 require_once __DIR__ . '/Services/CacheService.php';
 
+// Include middleware
+require_once __DIR__ . '/Middleware/AuthMiddleware.php';
+
 // Include core files
 require_once __DIR__ . '/Router.php';
 require_once __DIR__ . '/TwigConfig.php';
+
+// Include controllers
 require_once __DIR__ . '/Controllers/ReleaseController.php';
+require_once __DIR__ . '/Controllers/AuthController.php';
+require_once __DIR__ . '/Controllers/HomeController.php';
+require_once __DIR__ . '/Controllers/SettingsController.php';
 
 // Include utility functions
 require_once __DIR__ . '/Utils/utils.php';

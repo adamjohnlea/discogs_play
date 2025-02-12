@@ -2,6 +2,7 @@
 
 class FolderService {
     private $config;
+    private $discogsService;
     private $folderMap = [
         'all' => '0',
         'uncategorized' => '1'
@@ -10,6 +11,8 @@ class FolderService {
 
     public function __construct($config) {
         $this->config = $config;
+        require_once __DIR__ . '/DiscogsService.php';
+        $this->discogsService = new DiscogsService($config);
         
         // Initialize folder mappings
         $folders = $this->getFolders();
@@ -92,27 +95,21 @@ class FolderService {
      * Get folders from Discogs API
      */
     private function getFolders() {
-        $url = $this->config['discogs']['api_url'] . "/users/" . $this->config['discogs']['username'] . "/collection/folders";
-        
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => [
-                    'User-Agent: ' . $this->config['discogs']['user_agent'],
-                    'Authorization: Discogs token=' . $this->config['discogs']['token']
-                ]
-            ]
-        ];
-        
-        $context = stream_context_create($opts);
-        
+        if (!isset($_SESSION['user_id'])) {
+            return ['folders' => []];
+        }
+
         try {
+            $url = $this->discogsService->buildUrl('/users/:username/collection/folders', $_SESSION['user_id']);
+            $context = $this->discogsService->getApiContext($_SESSION['user_id']);
+            
             $response = @file_get_contents($url, false, $context);
             if ($response === false) {
                 return ['folders' => []];
             }
             return json_decode($response, true) ?: ['folders' => []];
         } catch (Exception $e) {
+            error_log("Error getting folders: " . $e->getMessage());
             return ['folders' => []];
         }
     }

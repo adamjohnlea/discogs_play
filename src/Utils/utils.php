@@ -56,18 +56,59 @@ $options = array(
 $context = stream_context_create($options);
 
 function get_folders() {
-    global $DISCOGS_API_URL, $DISCOGS_USERNAME, $DISCOGS_TOKEN, $context;
+    global $config;
     
-    $folderjson = $DISCOGS_API_URL . "/users/" . $DISCOGS_USERNAME . "/collection/folders";
+    if (!isset($_SESSION['user_id'])) {
+        return ['folders' => []];
+    }
+    
+    require_once __DIR__ . '/../Services/DiscogsService.php';
+    require_once __DIR__ . '/../Services/CacheService.php';
+    require_once __DIR__ . '/../Services/LogService.php';
+    
+    $discogsService = new DiscogsService($config);
+    $cacheService = new CacheService($config);
+    $logger = LogService::getInstance($config);
     
     try {
-        $folderdata = @file_get_contents($folderjson, false, $context);
-        if ($folderdata === false) {
-            return array('folders' => array());
+        // Check cache first
+        $cachedFolders = $cacheService->getCachedFolders($_SESSION['user_id']);
+        if ($cachedFolders && $cacheService->isFoldersCacheValid($_SESSION['user_id'])) {
+            $logger->info("Using cached folders", [
+                'user_id' => $_SESSION['user_id'],
+                'cached_at' => $cachedFolders['last_updated'],
+                'cache_age' => time() - strtotime($cachedFolders['last_updated'])
+            ]);
+            return $cachedFolders['data'];
         }
-        return json_decode($folderdata, true) ?: array('folders' => array());
+        
+        // If not in cache or cache invalid, fetch from API
+        $url = $discogsService->buildUrl('/users/:username/collection/folders', $_SESSION['user_id']);
+        $context = $discogsService->getApiContext($_SESSION['user_id']);
+        
+        $logger->info("Fetching folders from Discogs", [
+            'user_id' => $_SESSION['user_id'],
+            'url' => $url
+        ]);
+        
+        $folderdata = @file_get_contents($url, false, $context);
+        if ($folderdata === false) {
+            $logger->error("Failed to fetch folders from Discogs");
+            return ['folders' => []];
+        }
+        
+        $data = json_decode($folderdata, true) ?: ['folders' => []];
+        
+        // Cache the folder data
+        $cacheService->cacheFolders($_SESSION['user_id'], $data);
+        
+        return $data;
     } catch (Exception $e) {
-        return array('folders' => array());
+        $logger->error("Error getting folders", [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return ['folders' => []];
     }
 }
 

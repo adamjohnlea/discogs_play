@@ -6,10 +6,16 @@ class CacheService {
     private $db;
     private $imageTypes = ['cover', 'release'];
     private $logger;
+    private $collectionCacheDuration = 86400; // 24 hours in seconds
     
     public function __construct($config) {
         $this->db = DatabaseService::getInstance($config)->getConnection();
         $this->logger = LogService::getInstance($config);
+        
+        // Allow override of cache duration for testing
+        if (isset($config['cache']['collection_duration'])) {
+            $this->collectionCacheDuration = $config['cache']['collection_duration'];
+        }
     }
     
     public function clearCache() {
@@ -19,11 +25,16 @@ class CacheService {
         return true;
     }
     
-    public function cacheRelease($releaseId, $releaseData, $myReleaseData = null) {
-        $this->logger->info("Caching release", ['release_id' => $releaseId]);
+    public function cacheRelease($releaseId, $releaseData, $myReleaseData = null, $isBasicData = false) {
+        $this->logger->info("Caching release", [
+            'release_id' => $releaseId,
+            'is_basic' => $isBasicData
+        ]);
+        
         $this->logger->debug("Release data structure", [
             'release_id' => $releaseId,
-            'keys' => array_keys($releaseData)
+            'keys' => array_keys($releaseData),
+            'is_basic' => $isBasicData
         ]);
         
         if ($myReleaseData) {
@@ -34,14 +45,15 @@ class CacheService {
         }
         
         $stmt = $this->db->prepare("
-            INSERT OR REPLACE INTO releases (id, data, my_data, last_updated)
-            VALUES (:id, :data, :my_data, CURRENT_TIMESTAMP)
+            INSERT OR REPLACE INTO releases (id, data, my_data, is_basic_data, last_updated)
+            VALUES (:id, :data, :my_data, :is_basic_data, CURRENT_TIMESTAMP)
         ");
         
         $result = $stmt->execute([
             ':id' => $releaseId,
             ':data' => json_encode($releaseData),
-            ':my_data' => $myReleaseData ? json_encode($myReleaseData) : null
+            ':my_data' => $myReleaseData ? json_encode($myReleaseData) : null,
+            ':is_basic_data' => $isBasicData ? 1 : 0
         ]);
         
         if (!$result) {
@@ -58,7 +70,7 @@ class CacheService {
         $this->logger->info("Fetching cached release", ['release_id' => $releaseId]);
         
         $stmt = $this->db->prepare("
-            SELECT data, my_data, last_updated 
+            SELECT data, my_data, is_basic_data, last_updated 
             FROM releases 
             WHERE id = :id
         ");
@@ -78,17 +90,19 @@ class CacheService {
             'release_id' => $releaseId,
             'data_keys' => array_keys($data),
             'my_data_keys' => $myData ? array_keys($myData) : null,
+            'is_basic_data' => (bool)$result['is_basic_data'],
             'cached_at' => $result['last_updated']
         ]);
         
         return [
             'data' => $data,
             'my_data' => $myData,
+            'is_basic_data' => (bool)$result['is_basic_data'],
             'last_updated' => $result['last_updated']
         ];
     }
     
-    public function cacheImage($releaseId, $type, $imageUrl, $imageData, $mimeType) {
+    public function cacheImage($releaseId, $type, $imageUrl, $filePath, $mimeType) {
         if (!in_array($type, $this->imageTypes)) {
             throw new InvalidArgumentException("Invalid image type: {$type}");
         }
@@ -100,16 +114,16 @@ class CacheService {
             // Cache the image
             $stmt = $this->db->prepare("
                 INSERT OR REPLACE INTO images 
-                (release_id, type, image_data, mime_type, original_url, last_updated)
-                VALUES (:release_id, :type, :image_data, :mime_type, :original_url, CURRENT_TIMESTAMP)
+                (release_id, type, mime_type, original_url, file_path, last_updated)
+                VALUES (:release_id, :type, :mime_type, :original_url, :file_path, CURRENT_TIMESTAMP)
             ");
             
             $stmt->execute([
                 ':release_id' => $releaseId,
                 ':type' => $type,
-                ':image_data' => $imageData,
                 ':mime_type' => $mimeType,
-                ':original_url' => $imageUrl
+                ':original_url' => $imageUrl,
+                ':file_path' => $filePath
             ]);
 
             // Commit transaction
@@ -128,7 +142,7 @@ class CacheService {
         }
         
         $stmt = $this->db->prepare("
-            SELECT image_data, mime_type, last_updated 
+            SELECT file_path, mime_type, last_updated 
             FROM images 
             WHERE release_id = :release_id 
             AND type = :type 
@@ -144,9 +158,9 @@ class CacheService {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
-    public function isReleaseCacheValid($releaseId) {
+    public function isReleaseCacheValid($releaseId, $allowBasicData = false) {
         $stmt = $this->db->prepare("
-            SELECT data 
+            SELECT data, is_basic_data 
             FROM releases 
             WHERE id = :id
         ");
@@ -162,6 +176,15 @@ class CacheService {
         $data = json_decode($result['data'], true);
         if (empty($data)) {
             $this->logger->debug("Cache entry exists but is empty", ['release_id' => $releaseId]);
+            return false;
+        }
+
+        // For collection views, basic data is considered valid
+        if ($result['is_basic_data'] && !$allowBasicData) {
+            $this->logger->debug("Cache entry contains only basic data", [
+                'release_id' => $releaseId,
+                'data_keys' => array_keys($data)
+            ]);
             return false;
         }
         
@@ -205,5 +228,112 @@ class CacheService {
         ");
         
         return $stmt->execute([':id' => $releaseId]);
+    }
+    
+    public function cacheCollection($cacheKey, $data) {
+        $this->logger->info("Caching collection list", [
+            'cache_key' => $cacheKey
+        ]);
+        
+        $stmt = $this->db->prepare("
+            INSERT OR REPLACE INTO releases (id, data, is_basic_data, last_updated)
+            VALUES (:id, :data, 0, CURRENT_TIMESTAMP)
+        ");
+        
+        return $stmt->execute([
+            ':id' => 'collection_' . $cacheKey,
+            ':data' => json_encode($data)
+        ]);
+    }
+    
+    public function getCachedCollection($cacheKey) {
+        $stmt = $this->db->prepare("
+            SELECT data, last_updated 
+            FROM releases 
+            WHERE id = :id
+        ");
+        
+        $stmt->execute([':id' => 'collection_' . $cacheKey]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$result) {
+            return null;
+        }
+        
+        return json_decode($result['data'], true);
+    }
+    
+    public function isCollectionCacheValid($cacheKey) {
+        $stmt = $this->db->prepare("
+            SELECT last_updated 
+            FROM releases 
+            WHERE id = :id
+        ");
+        
+        $stmt->execute([':id' => 'collection_' . $cacheKey]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$result) {
+            return false;
+        }
+        
+        // Use configurable cache duration
+        $cacheAge = time() - strtotime($result['last_updated']);
+        return $cacheAge < $this->collectionCacheDuration;
+    }
+    
+    public function cacheFolders($userId, $folderData) {
+        $this->logger->info("Caching folders for user", [
+            'user_id' => $userId
+        ]);
+        
+        $stmt = $this->db->prepare("
+            INSERT OR REPLACE INTO folders (user_id, data, last_updated)
+            VALUES (:user_id, :data, CURRENT_TIMESTAMP)
+        ");
+        
+        return $stmt->execute([
+            ':user_id' => $userId,
+            ':data' => json_encode($folderData)
+        ]);
+    }
+    
+    public function getCachedFolders($userId) {
+        $stmt = $this->db->prepare("
+            SELECT data, last_updated 
+            FROM folders 
+            WHERE user_id = :user_id
+        ");
+        
+        $stmt->execute([':user_id' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$result) {
+            return null;
+        }
+        
+        return [
+            'data' => json_decode($result['data'], true),
+            'last_updated' => $result['last_updated']
+        ];
+    }
+    
+    public function isFoldersCacheValid($userId) {
+        $stmt = $this->db->prepare("
+            SELECT last_updated 
+            FROM folders 
+            WHERE user_id = :user_id
+        ");
+        
+        $stmt->execute([':user_id' => $userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$result) {
+            return false;
+        }
+        
+        // Cache folders for 24 hours
+        $cacheAge = time() - strtotime($result['last_updated']);
+        return $cacheAge < 86400;
     }
 } 

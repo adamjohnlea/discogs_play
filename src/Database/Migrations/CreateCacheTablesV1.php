@@ -5,35 +5,29 @@ class CreateCacheTablesV1 {
         // Create releases table
         $db->exec("
             CREATE TABLE IF NOT EXISTS releases (
-                id INTEGER PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 data TEXT NOT NULL,
                 my_data TEXT,
+                is_basic_data INTEGER DEFAULT 0,
                 last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         ");
 
-        // Create images table
+        // Create folders table for caching folder data
         $db->exec("
-            CREATE TABLE IF NOT EXISTS images (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                release_id INTEGER NOT NULL,
-                type TEXT NOT NULL,
-                image_data BLOB NOT NULL,
-                mime_type TEXT NOT NULL,
-                original_url TEXT NOT NULL,
+            CREATE TABLE IF NOT EXISTS folders (
+                user_id INTEGER NOT NULL,
+                data TEXT NOT NULL,
                 last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (release_id) REFERENCES releases(id) ON DELETE CASCADE
+                PRIMARY KEY (user_id)
             )
         ");
-
-        // Create index for faster lookups
-        $db->exec("CREATE INDEX IF NOT EXISTS idx_images_release_type ON images(release_id, type)");
     }
 
     public function down($db) {
-        $db->exec("DROP TABLE IF EXISTS images");
         $db->exec("DROP TABLE IF EXISTS releases");
+        $db->exec("DROP TABLE IF EXISTS folders");
     }
 } 

@@ -1,0 +1,188 @@
+{% extends "layouts/base.html.twig" %}
+
+{% block title %}Register - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 my-5">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Create an Account</h4>
+            </div>
+            <div class="card-body">
+                {% if errors.general is defined %}
+                    <div class="alert alert-danger">
+                        {% for error in errors.general %}
+                            <p class="mb-0">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="/register" id="registrationForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control {% if errors.username is defined %}is-invalid{% endif %}" 
+                               id="username" name="username" value="{{ old.username ?? '' }}" required>
+                        {% if errors.username is defined %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.username %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control {% if errors.email is defined %}is-invalid{% endif %}" 
+                               id="email" name="email" value="{{ old.email ?? '' }}" required>
+                        {% if errors.email is defined %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.email %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control {% if errors.password is defined %}is-invalid{% endif %}" 
+                               id="password" name="password" required>
+                        {% if errors.password is defined %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.password %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="password-requirements mt-2">
+                            <p class="requirement" id="length-check">
+                                <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                At least 8 characters
+                            </p>
+                            <p class="requirement" id="uppercase-check">
+                                <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                Contains uppercase letter
+                            </p>
+                            <p class="requirement" id="lowercase-check">
+                                <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                Contains lowercase letter
+                            </p>
+                            <p class="requirement" id="number-check">
+                                <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                Contains number
+                            </p>
+                            <p class="requirement" id="symbol-check">
+                                <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                Contains symbol
+                            </p>
+                            <p class="requirement" id="match-check">
+                                <i class="fa-solid fa-circle-xmark text-danger"></i>
+                                Passwords match
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control {% if errors.confirm_password is defined %}is-invalid{% endif %}" 
+                               id="confirm_password" name="confirm_password" required>
+                        {% if errors.confirm_password is defined %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.confirm_password %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="registerButton" disabled>Register</button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p class="mb-0">Already have an account? <a href="/login" class="text-decoration-none">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const registerButton = document.getElementById('registerButton');
+    
+    function validatePassword() {
+        const value = password.value;
+        const confirmValue = confirmPassword.value;
+        
+        // Length check
+        updateRequirement('length-check', value.length >= 8);
+        
+        // Uppercase check
+        updateRequirement('uppercase-check', /[A-Z]/.test(value));
+        
+        // Lowercase check
+        updateRequirement('lowercase-check', /[a-z]/.test(value));
+        
+        // Number check
+        updateRequirement('number-check', /[0-9]/.test(value));
+        
+        // Symbol check
+        updateRequirement('symbol-check', /[!@#$%^&*(),.?":{}|<>]/.test(value));
+        
+        // Match check
+        updateRequirement('match-check', value === confirmValue && value !== '');
+
+        // Enable/disable register button based on all requirements being met
+        const allRequirementsMet = document.querySelectorAll('.requirement i.text-success').length === 6;
+        registerButton.disabled = !allRequirementsMet;
+    }
+    
+    function updateRequirement(id, valid) {
+        const element = document.getElementById(id);
+        const icon = element.querySelector('i');
+        
+        if (valid) {
+            icon.classList.remove('fa-circle-xmark', 'text-danger');
+            icon.classList.add('fa-circle-check', 'text-success');
+            element.classList.remove('text-danger');
+            element.classList.add('text-success');
+        } else {
+            icon.classList.remove('fa-circle-check', 'text-success');
+            icon.classList.add('fa-circle-xmark', 'text-danger');
+            element.classList.remove('text-success');
+            element.classList.add('text-danger');
+        }
+    }
+    
+    // Add event listeners for real-time validation
+    password.addEventListener('input', validatePassword);
+    confirmPassword.addEventListener('input', validatePassword);
+});
+</script>
+
+<style>
+.password-requirements {
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.requirement {
+    margin-bottom: 5px;
+    transition: color 0.3s ease;
+}
+
+.requirement i {
+    margin-right: 8px;
+    transition: color 0.3s ease;
+}
+</style>
+{% endblock %} 

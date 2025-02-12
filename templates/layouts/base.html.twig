@@ -71,9 +71,11 @@
             {% include 'partials/top_banner.html.twig' %}
         {% endblock %}
 
-        {% block nav %}
-            {% include 'partials/top_nav_filter_bar.html.twig' %}
-        {% endblock %}
+        {% if collection is defined %}
+            {% block nav %}
+                {% include 'partials/top_nav_filter_bar.html.twig' %}
+            {% endblock %}
+        {% endif %}
 
         {% block content %}{% endblock %}
 

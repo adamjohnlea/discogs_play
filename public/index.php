@@ -6,24 +6,18 @@ require_once __DIR__ . '/../src/bootstrap.php';
 // Initialize router
 $router = new Router($config);
 
-// Load and execute routes function
-$routesFunction = require __DIR__ . '/../config/routes.php';
-$routesFunction($router);
+// Load routes
+$routes = require __DIR__ . '/../config/routes.php';
+$routes($router);
+
+// Initialize auth middleware
+$authMiddleware = new AuthMiddleware($config);
+
+// Get the request URI
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Run auth middleware
+$authMiddleware->handle(parse_url($requestUri, PHP_URL_PATH));
 
 // Dispatch the request
-$requestUri = $_SERVER['REQUEST_URI'];
-$result = $router->dispatch($requestUri);
-
-// Handle the result
-if (isset($result['error'])) {
-    // Handle error (404, etc)
-    echo TwigConfig::getInstance($config)->render('error.html.twig', [
-        'error' => $result['error']
-    ]);
-    exit;
-}
-
-// If the result is a string (Twig template output), echo it directly
-if (is_string($result)) {
-    echo $result;
-}
+$router->dispatch($requestUri);
