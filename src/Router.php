@@ -3,9 +3,12 @@
 class Router {
     private $routes = [];
     private $config;
+    private $folderService;
 
     public function __construct($config) {
         $this->config = $config;
+        require_once __DIR__ . '/Services/FolderService.php';
+        $this->folderService = new FolderService($config);
     }
 
     public function add($path, $callback) {
@@ -33,13 +36,9 @@ class Router {
         $queryParams = [];
         if (isset($parsedUrl['query'])) {
             parse_str($parsedUrl['query'], $queryParams);
-            
-            // Set query parameters as globals
-            foreach ($queryParams as $key => $value) {
-                $GLOBALS[$key] = $value;
-            }
         }
 
+        // First try to match clean URLs
         foreach ($this->routes as $pattern => $callback) {
             if (preg_match($pattern, $path, $matches)) {
                 // Remove numeric keys from matches
@@ -47,11 +46,89 @@ class Router {
                     return !is_numeric($key);
                 }, ARRAY_FILTER_USE_KEY);
                 
-                return ['callback' => $callback, 'params' => $params, 'query' => $queryParams];
+                // For clean URLs, we'll still need some parameters in a standard format
+                $standardParams = $this->standardizeParams($params, $queryParams);
+                
+                // Set standardized parameters as globals for backward compatibility
+                foreach ($standardParams as $key => $value) {
+                    $GLOBALS[$key] = $value;
+                }
+                
+                return [
+                    'callback' => $callback,
+                    'params' => $params,
+                    'query' => $standardParams
+                ];
             }
+        }
+
+        // If no clean URL match, handle legacy query parameters
+        if ($path === '/' && !empty($queryParams)) {
+            // Set query parameters as globals for backward compatibility
+            foreach ($queryParams as $key => $value) {
+                $GLOBALS[$key] = $value;
+            }
+            
+            // Determine which controller/action to use based on query params
+            $callback = $this->determineLegacyCallback($queryParams);
+            return [
+                'callback' => $callback,
+                'params' => [],
+                'query' => $queryParams
+            ];
         }
         
         return null;
+    }
+
+    private function standardizeParams($params, $queryParams) {
+        $standard = [];
+        
+        // Convert clean URL parameters to standard format
+        if (isset($params['id'])) {
+            $standard['releaseid'] = $params['id'];
+        }
+        if (isset($params['folder'])) {
+            $standard['folder_id'] = $this->folderService->getFolderId($params['folder']);
+        }
+        if (isset($params['page'])) {
+            $standard['page'] = $params['page'];
+        }
+        if (isset($params['field'])) {
+            $standard['sort_by'] = $params['field'];
+        }
+        if (isset($params['direction'])) {
+            $standard['order'] = $params['direction'];
+        }
+        
+        // Set defaults if not provided
+        if (!isset($standard['page'])) {
+            $standard['page'] = '1';
+        }
+        if (!isset($standard['sort_by'])) {
+            $standard['sort_by'] = 'added';
+        }
+        if (!isset($standard['order'])) {
+            $standard['order'] = 'desc';
+        }
+        if (!isset($standard['folder_id'])) {
+            $standard['folder_id'] = '0';
+        }
+        
+        // Merge with any existing query parameters
+        return array_merge($standard, $queryParams);
+    }
+
+    private function determineLegacyCallback($params) {
+        // Default to collection view
+        $callback = ['ReleaseController', 'showCollection'];
+        
+        // If we have a release ID, show the release
+        if (isset($params['releaseid'])) {
+            $callback = ['ReleaseController', 'showRelease'];
+        }
+        
+        return $callback;
     }
 
     public function dispatch($requestUri) {

@@ -14,9 +14,11 @@ class TwigConfig {
             'debug' => $config['app']['environment'] === 'development',
         ]);
 
-        // Initialize ImageService
+        // Initialize Services
         require_once __DIR__ . '/Services/ImageService.php';
+        require_once __DIR__ . '/Services/UrlService.php';
         $this->imageService = new ImageService($config);
+        $urlService = new UrlService($config);
 
         // Add any global variables here
         $this->twig->addGlobal('app_name', $config['app']['name']);
@@ -32,6 +34,23 @@ class TwigConfig {
 
         $this->twig->addFunction(new \Twig\TwigFunction('release_image', function ($url, $releaseId, $index = 0) {
             return $this->imageService->getReleaseImage($url, $releaseId, $index);
+        }));
+
+        // Add URL generation functions
+        $this->twig->addFunction(new \Twig\TwigFunction('release_url', function ($id) use ($urlService) {
+            return $urlService->release($id);
+        }));
+
+        $this->twig->addFunction(new \Twig\TwigFunction('folder_url', function ($id, $name = null) use ($urlService) {
+            return $urlService->folder($id, $name);
+        }));
+
+        $this->twig->addFunction(new \Twig\TwigFunction('sort_url', function ($field, $direction, $currentParams = []) use ($urlService) {
+            return $urlService->sort($field, $direction, $currentParams);
+        }));
+
+        $this->twig->addFunction(new \Twig\TwigFunction('page_url', function ($number, $currentParams = []) use ($urlService) {
+            return $urlService->page($number, $currentParams);
         }));
 
         // Add filters

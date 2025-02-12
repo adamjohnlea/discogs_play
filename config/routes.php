@@ -1,12 +1,17 @@
 <?php
 
-return [
-    // Home page (collection view)
-    '/' => ['ReleaseController', 'showCollection'],
+return function($router) {
+    // Release view
+    $router->add('/release/:id', ['ReleaseController', 'showRelease']);
     
-    // Single release view - support both URL formats
-    '/release/:release_id' => ['ReleaseController', 'showRelease'],
-    '/' => ['ReleaseController', 'handleRequest'], // This will handle both collection and release views based on query parameters
+    // Collection view with clean URLs for folder, sorting, and pagination
+    $router->add('/folder/:folder/sort/:field/:direction/page/:page', ['ReleaseController', 'showCollection']);
     
-    // Add more routes here as needed
-]; 
+    // Simpler variations of collection view
+    $router->add('/folder/:folder/page/:page', ['ReleaseController', 'showCollection']);
+    $router->add('/folder/:folder/sort/:field/:direction', ['ReleaseController', 'showCollection']);
+    $router->add('/folder/:folder', ['ReleaseController', 'showCollection']);
+    
+    // Root path - defaults to collection view
+    $router->add('/', ['ReleaseController', 'showCollection']);
+}; 

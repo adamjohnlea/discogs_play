@@ -3,10 +3,13 @@
 class ReleaseController {
     private $config;
     private $twig;
+    private $urlService;
 
     public function __construct($config) {
         $this->config = $config;
         $this->twig = TwigConfig::getInstance($config);
+        require_once __DIR__ . '/../Services/UrlService.php';
+        $this->urlService = new UrlService($config);
     }
 
     public function handleRequest() {
@@ -60,6 +63,11 @@ class ReleaseController {
             return $this->twig->render('error.html.twig', [
                 'error' => 'Failed to load collection'
             ]);
+        }
+
+        // Update folder mappings if we have folders
+        if (isset($folders['folders'])) {
+            $this->urlService->updateFolderMappings($folders['folders']);
         }
         
         return $this->twig->render('release_gallery.html.twig', [

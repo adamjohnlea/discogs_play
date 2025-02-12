@@ -3,18 +3,18 @@
     {% if release_id is not defined or not release_id %}
         <div class="btn-group btn-group-sm mr-2 p-1" role="group" aria-label="Pagination">
             <a class="btn btn-primary text-uppercase {{ page == 1 ? 'disabled' : '' }}" 
-               href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page={{ page != 1 ? page - 1 : page }}" 
+               href="{{ page_url(page - 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order}) }}" 
                tabindex="-1">&#12298;</a>
             
             {% if collection is defined %}
                 {% for x in 1..collection.pagination.pages %}
                     <a class="btn btn-primary text-uppercase {{ page == x ? 'active disabled' : '' }}"
-                       href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page={{ x }}">{{ x }}</a>
+                       href="{{ page_url(x, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order}) }}">{{ x }}</a>
                 {% endfor %}
             {% endif %}
 
             <a class="btn btn-primary text-uppercase {{ page == collection.pagination.pages ? 'disabled' : '' }}"
-               href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page={{ page != collection.pagination.pages ? page + 1 : page }}"
+               href="{{ page_url(page + 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order}) }}"
                tabindex="-1">&#12299;</a>
         </div>
 
@@ -25,7 +25,7 @@
             <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
                 {% for items in [25, 50, 100] %}
                     <a class="dropdown-item"
-                       href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ items }}&page=1">{{ items }}</a>
+                       href="{{ page_url(1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order, 'per_page': items}) }}">{{ items }}</a>
                 {% endfor %}
             </div>
         </div>
@@ -34,7 +34,7 @@
             {% if folders is defined %}
                 {% for folder in folders.folders %}
                     {% if folder.count >= 1 %}
-                        <a href="/?folder_id={{ folder.id }}&sort_by={{ sort_by }}&order={{ order }}&per_page={{ per_page }}&page=1"
+                        <a href="{{ folder_url(folder.id, folder.name) }}"
                            title="View Folder '{{ folder.name }}'"
                            class="btn btn-primary text-uppercase{{ folder_id == folder.id ? ' disabled' : '' }}">
                             {{ folder.name }} ({{ folder.count }})
@@ -45,12 +45,12 @@
         </div>
 
         <div class="btn-group btn-group-sm mr-2 p-1" role="group" aria-label="Sort by Artist or Date Added">
-            <a href="/?folder_id={{ folder_id }}&sort_by=added&order={{ order }}&per_page={{ per_page }}&page={{ page }}"
+            <a href="{{ sort_url('added', order, {'folder_id': folder_id}) }}"
                title="Sort By Added"
                class="btn btn-info text-uppercase{{ sort_by == 'added' ? ' disabled' : '' }}">
                 <i class="fa-solid fa-clock"></i>
             </a>
-            <a href="/?folder_id={{ folder_id }}&sort_by=artist&order={{ order }}&page={{ page }}"
+            <a href="{{ sort_url('artist', order, {'folder_id': folder_id}) }}"
                title="Sort By Artist"
                class="btn btn-info text-uppercase{{ sort_by == 'artist' ? ' disabled' : '' }}">
                 <i class="fa-solid fa-user-group"></i>
@@ -58,12 +58,12 @@
         </div>
 
         <div class="btn-group btn-group-sm p-1" role="group" aria-label="Ascending or Descending">
-            <a href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order=asc&per_page={{ per_page }}"
+            <a href="{{ sort_url(sort_by, 'asc', {'folder_id': folder_id}) }}"
                title="Ascending"
                class="btn btn-secondary text-uppercase{{ order == 'asc' ? ' disabled' : '' }}">
                 <i class="fa-solid fa-circle-arrow-down"></i>
             </a>
-            <a href="/?folder_id={{ folder_id }}&sort_by={{ sort_by }}&order=desc&per_page={{ per_page }}&page={{ page }}"
+            <a href="{{ sort_url(sort_by, 'desc', {'folder_id': folder_id}) }}"
                title="Descending"
                class="btn btn-secondary text-uppercase{{ order == 'desc' ? ' disabled' : '' }}">
                 <i class="fa-solid fa-circle-arrow-up"></i>
