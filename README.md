@@ -4,6 +4,27 @@
 
 <h2>Features</h2>
 <ul>
+    <li>User Authentication:
+        <ul>
+            <li>Secure user registration and login</li>
+            <li>Remember me functionality</li>
+            <li>Password security with modern hashing</li>
+        </ul>
+    </li>
+    <li>Discogs Integration:
+        <ul>
+            <li>Personal access token authentication</li>
+            <li>Automatic synchronization with your Discogs collection</li>
+            <li>Manual refresh option for immediate updates</li>
+        </ul>
+    </li>
+    <li>Smart Caching System:
+        <ul>
+            <li>24-hour collection cache for optimal performance</li>
+            <li>Permanent caching of release data and images</li>
+            <li>Manual cache refresh via settings</li>
+        </ul>
+    </li>
     <li>Browse your Discogs collection with a modern, responsive interface</li>
     <li>View detailed release information including:
         <ul>
@@ -26,6 +47,9 @@
 <h2>URL Structure</h2>
 <p>The application uses clean, SEO-friendly URLs:</p>
 <ul>
+    <li>Home: <code>/</code></li>
+    <li>Authentication: <code>/login</code>, <code>/register</code></li>
+    <li>Settings: <code>/settings</code></li>
     <li>Collection view: <code>/folder/{folder-name}</code></li>
     <li>Sorted view: <code>/folder/{folder-name}/sort/{field}/{direction}/page/{number}</code></li>
     <li>Release view: <code>/release/{id}/{artist-name}/{release-title}</code></li>
@@ -33,7 +57,7 @@
 
 <h2>Technical Stack</h2>
 <ul>
-    <li>PHP 7.4+</li>
+    <li>PHP 8.3+</li>
     <li>Twig templating engine</li>
     <li>Bootstrap 5 for styling</li>
     <li>Font Awesome icons</li>
@@ -65,9 +89,24 @@
 <h2>Configuration</h2>
 <p>The application requires the following configuration in <code>config/config.php</code>:</p>
 <ul>
-    <li>Discogs API credentials</li>
-    <li>Application paths</li>
-    <li>Environment settings</li>
+    <li>Application settings:
+        <ul>
+            <li>Application name</li>
+            <li>Environment (development/production)</li>
+        </ul>
+    </li>
+    <li>Cache settings:
+        <ul>
+            <li>Collection cache duration (default: 24 hours)</li>
+        </ul>
+    </li>
+    <li>Path configurations:
+        <ul>
+            <li>Templates directory</li>
+            <li>Public directory</li>
+            <li>Database location</li>
+        </ul>
+    </li>
 </ul>
 
 <h2>Directory Structure</h2>
@@ -80,9 +119,14 @@
 │   └── index.php      # Application entry point
 ├── src/               # Application source code
 │   ├── Controllers/   # Application controllers
+│   ├── Database/      # Database migrations
+│   ├── Functions/     # Helper functions
+│   ├── Middleware/    # Application middleware
+│   ├── Models/        # Data models
 │   ├── Services/      # Service classes
-│   └── Functions/     # Helper functions
+│   └── Utils/         # Utility functions
 └── templates/         # Twig templates
+    ├── auth/          # Authentication templates
     ├── layouts/       # Base templates
     └── partials/      # Reusable template parts
 </pre>
@@ -99,6 +143,7 @@
 <p>The application includes several useful command-line tools:</p>
 <ul>
     <li><code>./bin/migrate migrate</code> - Set up or update the database schema</li>
+    <li><code>./bin/migrate rollback</code> - Roll back the last database migration</li>
     <li><code>./bin/clear-cache</code> - Clear the release and image cache</li>
     <li><code>./bin/view-logs</code> - View application logs (accepts optional line count and filter parameters)</li>
 </ul>
