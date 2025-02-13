@@ -184,13 +184,18 @@ class CacheService {
     }
     
     public function cacheCollection($cacheKey, $data) {
+        // Ensure we have user_id in the data
+        if (!isset($data['user_id'])) {
+            throw new InvalidArgumentException('Collection data must include user_id');
+        }
+
         $stmt = $this->db->prepare("
             INSERT OR REPLACE INTO releases (id, data, is_basic_data, last_updated)
             VALUES (:id, :data, 0, CURRENT_TIMESTAMP)
         ");
         
         return $stmt->execute([
-            ':id' => 'collection_' . $cacheKey,
+            ':id' => $cacheKey,  // Already includes user_id in the key
             ':data' => json_encode($data)
         ]);
     }
@@ -202,14 +207,21 @@ class CacheService {
             WHERE id = :id
         ");
         
-        $stmt->execute([':id' => 'collection_' . $cacheKey]);
+        $stmt->execute([':id' => $cacheKey]);  // Key already includes user_id
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$result) {
             return null;
         }
         
-        return json_decode($result['data'], true);
+        $data = json_decode($result['data'], true);
+        
+        // Ensure the data includes user_id
+        if (!isset($data['user_id'])) {
+            return null;
+        }
+        
+        return $data;
     }
     
     public function isCollectionCacheValid($cacheKey) {
@@ -219,7 +231,7 @@ class CacheService {
             WHERE id = :id
         ");
         
-        $stmt->execute([':id' => 'collection_' . $cacheKey]);
+        $stmt->execute([':id' => $cacheKey]);  // Key already includes user_id
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$result) {

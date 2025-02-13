@@ -16,12 +16,15 @@ function get_collection() {
     $cacheService = new CacheService($config);
     
     try {
-        // Check if we have a cached collection list for this combination
-        $cacheKey = "collection_{$folder_id}_{$sort_by}_{$order}_{$page}_{$per_page}";
+        // Include user_id in the cache key to separate collections by user
+        $cacheKey = "collection_{$_SESSION['user_id']}_{$folder_id}_{$sort_by}_{$order}_{$page}_{$per_page}";
         $cachedCollection = $cacheService->getCachedCollection($cacheKey);
         
         if ($cachedCollection && $cacheService->isCollectionCacheValid($cacheKey)) {
-            return $cachedCollection;
+            // Ensure the cached data belongs to the current user
+            if (isset($cachedCollection['user_id']) && $cachedCollection['user_id'] == $_SESSION['user_id']) {
+                return $cachedCollection;
+            }
         }
         
         // If not in cache, fetch from Discogs
@@ -65,6 +68,9 @@ function get_collection() {
             ];
         }
 
+        // Add user_id to the data for validation
+        $data['user_id'] = $_SESSION['user_id'];
+        
         $cacheStats = ['cached' => 0, 'uncached' => 0];
         
         // For each release in the collection, check if we have it cached
