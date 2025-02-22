@@ -3,11 +3,14 @@
 class AuthService {
     private $db;
     private $user;
+    private $logger;
     
     public function __construct($config) {
         $this->db = DatabaseService::getInstance($config)->getConnection();
         require_once __DIR__ . '/../Models/User.php';
+        require_once __DIR__ . '/LogService.php';
         $this->user = new User($this->db);
+        $this->logger = LogService::getInstance($config);
     }
     
     public function validateRegistration($username, $email, $password, $confirmPassword) {
@@ -102,13 +105,50 @@ class AuthService {
             $success = $this->user->create($username, $email, $password);
             
             if ($success) {
+                // Get the newly created user's ID
+                $userId = $this->db->lastInsertId();
+                
+                $this->logger->info('User created successfully', [
+                    'user_id' => $userId,
+                    'username' => $username
+                ]);
+                
+                // Create initial user settings row
+                $stmt = $this->db->prepare("
+                    INSERT INTO user_settings (user_id, created_at, updated_at)
+                    VALUES (:user_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ");
+                
+                $settingsSuccess = $stmt->execute([':user_id' => $userId]);
+                
+                if (!$settingsSuccess) {
+                    $error = $stmt->errorInfo();
+                    $this->logger->error('Failed to create user_settings row', [
+                        'user_id' => $userId,
+                        'error' => $error
+                    ]);
+                    $this->db->rollback();
+                    return false;
+                }
+                
+                $this->logger->info('User settings row created successfully', [
+                    'user_id' => $userId
+                ]);
+                
                 $this->db->commit();
                 return true;
             }
             
+            $this->logger->error('Failed to create user', [
+                'username' => $username
+            ]);
             $this->db->rollback();
             return false;
         } catch (Exception $e) {
+            $this->logger->error('Exception during registration', [
+                'error' => $e->getMessage(),
+                'username' => $username
+            ]);
             $this->db->rollback();
             throw $e;
         }
