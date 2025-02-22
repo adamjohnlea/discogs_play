@@ -1,0 +1,20 @@
+/* Table styling */
+.table {
+    color: var(--bs-body-color);
+    margin-bottom: 0;
+}
+
+/* Striped table rows */
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Table hover effect */
+.table-hover > tbody > tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Table borders */
+.table > :not(caption) > * > * {
+    border-color: var(--border-color);
+} 
