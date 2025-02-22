@@ -2,3 +2,124 @@
 <div class="collection-controls d-flex justify-content-center p-3">
     {% include 'partials/pagination.html.twig' %}
 </div>
+
+{% if collection is defined %}
+    <div class="filter-bar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                {# Folder Selection #}
+                <div class="col-auto">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-folder me-2"></i>
+                            {{ current_folder_name|default('All') }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% for f in folders.folders %}
+                                {% set folder_params = {
+                                    'folder': f.name|slugify,
+                                    'sort': sort_by,
+                                    'order': order,
+                                    'per_page': per_page
+                                } %}
+                                <li>
+                                    <a class="dropdown-item" href="/collection?{{ folder_params|url_encode }}">
+                                        {{ f.name }}
+                                        <span class="badge bg-secondary">{{ f.count }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {# Sort Options #}
+                <div class="col-auto">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-sort me-2"></i>
+                            Sort by {{ sort_by|default('added')|title }}
+                            <i class="fa-solid fa-arrow-{{ order == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% set sort_fields = {
+                                'added': 'Date Added',
+                                'artist': 'Artist',
+                                'title': 'Title',
+                                'year': 'Year'
+                            } %}
+                            {% for field, label in sort_fields %}
+                                {% set sort_params = {
+                                    'folder': folder,
+                                    'sort': field,
+                                    'order': field == sort_by ? (order == 'asc' ? 'desc' : 'asc') : 'asc',
+                                    'per_page': per_page
+                                } %}
+                                <li>
+                                    <a class="dropdown-item" href="/collection?{{ sort_params|url_encode }}">
+                                        {{ label }}
+                                        {% if field == sort_by %}
+                                            <i class="fa-solid fa-arrow-{{ order == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                        {% endif %}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {# Search Box #}
+                <div class="col">
+                    <form action="/collection/search" method="GET" class="d-flex">
+                        <input type="hidden" name="folder" value="{{ folder }}">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   placeholder="Search collection..." 
+                                   name="q" 
+                                   value="{{ search_query|default('') }}"
+                                   aria-label="Search">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fa-solid fa-search"></i>
+                            </button>
+                            {% if search_query is defined and search_query %}
+                                <a href="/collection?{{ {'folder': folder}|url_encode }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fa-solid fa-times"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                {# Items Per Page #}
+                <div class="col-auto">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-list-ol me-2"></i>
+                            {{ per_page }} per page
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% for count in [25, 50, 100] %}
+                                {% set per_page_params = {
+                                    'folder': folder,
+                                    'sort': sort_by,
+                                    'order': order,
+                                    'per_page': count
+                                } %}
+                                <li>
+                                    <a class="dropdown-item" href="/collection?{{ per_page_params|url_encode }}">
+                                        {{ count }} items
+                                        {% if count == per_page %}
+                                            <i class="fa-solid fa-check ms-2"></i>
+                                        {% endif %}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

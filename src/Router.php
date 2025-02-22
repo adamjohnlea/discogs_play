@@ -102,6 +102,32 @@ class Router {
             
             if (is_array($callback)) {
                 list($controller, $method) = $callback;
+                
+                // Load controller classes based on the controller name
+                switch ($controller) {
+                    case 'CollectionController':
+                        require_once __DIR__ . '/Controllers/CollectionController.php';
+                        break;
+                    case 'ReleaseController':
+                        require_once __DIR__ . '/Controllers/ReleaseController.php';
+                        break;
+                    case 'HomeController':
+                        require_once __DIR__ . '/Controllers/HomeController.php';
+                        break;
+                    case 'AuthController':
+                        require_once __DIR__ . '/Controllers/AuthController.php';
+                        break;
+                    case 'OAuthController':
+                        require_once __DIR__ . '/Controllers/OAuthController.php';
+                        break;
+                    case 'ProfileController':
+                        require_once __DIR__ . '/Controllers/ProfileController.php';
+                        break;
+                    case 'SettingsController':
+                        require_once __DIR__ . '/Controllers/SettingsController.php';
+                        break;
+                }
+                
                 $controller = new $controller($this->twig, $this->config);
                 return call_user_func_array([$controller, $method], $params);
             }

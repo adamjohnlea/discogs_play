@@ -24,22 +24,13 @@ return function($router) {
     // Settings routes
     $router->add('/settings', ['SettingsController', 'show']);
     $router->add('/refresh-collection', ['SettingsController', 'refreshCollection'], 'POST');
+
+    // Collection routes
+    $router->add('/collection', ['CollectionController', 'index']);
+    $router->add('/collection/search', ['CollectionController', 'search']);
     
-    // Release view - support both formats
-    $router->add('/release/:id/:artist/:title', ['ReleaseController', 'showRelease']);
-    $router->add('/release/:id', ['ReleaseController', 'showRelease']);
-    
-    // Collection view with clean URLs for folder, sorting, and pagination
-    $router->add('/folder/:folder/sort/:field/:direction/page/:page', ['ReleaseController', 'showCollection']);
-    
-    // Collection search routes
-    $router->add('/folder/:folder/search/:query/page/:page', ['ReleaseController', 'searchCollection']);
-    $router->add('/folder/:folder/search/:query', ['ReleaseController', 'searchCollection']);
-    
-    // Simpler variations of collection view
-    $router->add('/folder/:folder/page/:page', ['ReleaseController', 'showCollection']);
-    $router->add('/folder/:folder/sort/:field/:direction', ['ReleaseController', 'showCollection']);
-    $router->add('/folder/:folder', ['ReleaseController', 'showCollection']);
+    // Release routes
+    $router->add('/release/:id/:artist/:title', ['ReleaseController', 'show']);
     
     // Root path
     $router->add('/', ['HomeController', 'index']);

@@ -1,8 +1,23 @@
 {% if release_id is not defined or not release_id %}
     {% set current_folder = app.request.attributes.get('folder') ?? folder ?? 'all' %}
+    {% set current_params = {
+        'folder': current_folder,
+        'sort': sort_by,
+        'order': order,
+        'per_page': per_page
+    } %}
+    
+    {% if search_query is defined and search_query %}
+        {% set base_url = '/collection/search' %}
+        {% set current_params = current_params|merge({'q': search_query}) %}
+    {% else %}
+        {% set base_url = '/collection' %}
+    {% endif %}
+    
     <div class="modern-pagination" role="navigation" aria-label="Pagination">
+        {% set prev_params = current_params|merge({'page': page - 1}) %}
         <a class="page-btn page-nav {{ page == 1 ? 'disabled' : '' }}" 
-           href="{{ sort_url(sort_by, order, {'folder': current_folder, 'page': page - 1, 'per_page': per_page}) }}" 
+           href="{{ page == 1 ? '#' : base_url ~ '?' ~ prev_params|url_encode }}" 
            {% if page == 1 %}aria-disabled="true"{% endif %}
            aria-label="Previous page">
            &#12298;
@@ -19,8 +34,9 @@
                     (x <= 3 and page <= 5) or
                     (x >= total_pages - 2 and page >= total_pages - 4)
                 %}
+                    {% set page_params = current_params|merge({'page': x}) %}
                     <a class="page-btn {{ page == x ? 'active' : '' }} {{ page == x ? 'disabled' : '' }}"
-                       href="{{ sort_url(sort_by, order, {'folder': current_folder, 'page': x, 'per_page': per_page}) }}"
+                       href="{{ page == x ? '#' : base_url ~ '?' ~ page_params|url_encode }}"
                        {% if page == x %}aria-current="page"{% endif %}
                        aria-label="Page {{ x }}">
                         {{ x }}
@@ -32,14 +48,16 @@
                     <span class="page-btn disabled" aria-hidden="true">...</span>
                 {% endif %}
             {% endfor %}
+            
+            {% if page < total_pages %}
+                {% set next_params = current_params|merge({'page': page + 1}) %}
+                <a class="page-btn page-nav" 
+                   href="{{ base_url ~ '?' ~ next_params|url_encode }}"
+                   aria-label="Next page">
+                   &#12299;
+                </a>
+            {% endif %}
         {% endif %}
-
-        <a class="page-btn page-nav {{ page == collection.pagination.pages ? 'disabled' : '' }}"
-           href="{{ sort_url(sort_by, order, {'folder': current_folder, 'page': page + 1, 'per_page': per_page}) }}"
-           {% if page == collection.pagination.pages %}aria-disabled="true"{% endif %}
-           aria-label="Next page">
-           &#12299;
-        </a>
     </div>
 {% else %}
     <div class="btn-group btn-group-sm mr-2 p-1" role="group">

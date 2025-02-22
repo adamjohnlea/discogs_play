@@ -89,6 +89,23 @@ class TwigConfig {
             return trim($text);
         }));
 
+        // Add slugify filter
+        $this->twig->addFilter(new \Twig\TwigFilter('slugify', function($text) {
+            // Convert to lowercase
+            $text = strtolower($text);
+            
+            // Replace spaces and special characters with hyphens
+            $text = preg_replace('/[^a-z0-9-]/', '-', $text);
+            
+            // Remove multiple consecutive hyphens
+            $text = preg_replace('/-+/', '-', $text);
+            
+            // Remove leading and trailing hyphens
+            $text = trim($text, '-');
+            
+            return $text;
+        }));
+
         // Add extensions and functions
         if ($config['app']['environment'] === 'development') {
             $this->twig->addExtension(new \Twig\Extension\DebugExtension());

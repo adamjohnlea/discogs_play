@@ -34,8 +34,8 @@ class HomeController {
                 exit;
             }
             
-            // Only redirect to collection if OAuth credentials are set
-            header('Location: /folder/all');
+            // Redirect to collection view with default parameters
+            header('Location: /collection?folder=all');
             exit;
         }
         
