@@ -8,6 +8,7 @@ class CollectionController {
     private $discogsService;
     private $cacheService;
     private $logger;
+    private $db;
 
     public function __construct($twig, $config) {
         $this->twig = $twig;
@@ -23,6 +24,44 @@ class CollectionController {
         $this->discogsService = new DiscogsService($config);
         $this->cacheService = new CacheService($config);
         $this->logger = LogService::getInstance($config);
+        $this->db = DatabaseService::getInstance($config)->getConnection();
+
+        // Ensure search index is populated
+        $this->ensureSearchIndex();
+    }
+
+    /**
+     * Ensures the search index is populated if we have collection data
+     */
+    private function ensureSearchIndex() {
+        if (!$this->authService->isLoggedIn()) {
+            return;
+        }
+
+        try {
+            // Check if we have any entries in the search index
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) FROM collection_search 
+                WHERE user_id = :user_id
+            ");
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+            $count = $stmt->fetchColumn();
+
+            if ($count === 0) {
+                // Get cached collection data
+                $cacheKey = "collection_{$_SESSION['user_id']}_0_added_desc_1_999999";
+                $collection = $this->cacheService->getCachedCollection($cacheKey);
+                
+                if ($collection && isset($collection['releases'])) {
+                    $this->updateSearchIndex($_SESSION['user_id'], $collection['releases']);
+                    $this->logger->info("Search index initialized", [
+                        'releases_indexed' => count($collection['releases'])
+                    ]);
+                }
+            }
+        } catch (Exception $e) {
+            $this->logger->error("Failed to ensure search index: " . $e->getMessage());
+        }
     }
 
     /**
@@ -40,14 +79,6 @@ class CollectionController {
         $order = $_GET['order'] ?? 'desc';
         $page = max(1, intval($_GET['page'] ?? 1));
         $perPage = max(1, intval($_GET['per_page'] ?? 25));
-
-        // Store current state in globals for backward compatibility
-        // @deprecated - Will be removed when legacy routes are removed
-        $GLOBALS['folder'] = $folder;
-        $GLOBALS['page'] = $page;
-        $GLOBALS['sort_by'] = $sort;
-        $GLOBALS['order'] = $order;
-        $GLOBALS['per_page'] = $perPage;
         
         try {
             // Get collection data
@@ -56,7 +87,6 @@ class CollectionController {
             
             // Get folder ID from slug
             $folderId = $this->folderService->getFolderId($folder);
-            $GLOBALS['folder_id'] = $folderId;
 
             $this->logger->info('Showing collection', [
                 'folder' => $folder,
@@ -93,93 +123,72 @@ class CollectionController {
             exit;
         }
 
-        $query = $_GET['q'] ?? '';
+        $query = strtolower($_GET['q'] ?? '');
         $folder = $_GET['folder'] ?? 'all';
         $page = max(1, intval($_GET['page'] ?? 1));
         $perPage = max(1, intval($_GET['per_page'] ?? 25));
 
-        // Store current state in globals for backward compatibility
-        // @deprecated - Will be removed when legacy routes are removed
-        $GLOBALS['folder'] = $folder;
-        $GLOBALS['page'] = $page;
-        $GLOBALS['per_page'] = $perPage;
-
         try {
-            // Override pagination for initial collection fetch to get all items
-            $GLOBALS['per_page'] = 999999; // Large number to get all items
-            $GLOBALS['page'] = 1;
-
-            $collection = get_collection();
             $folders = get_folders();
-
-            // Restore original pagination values
-            $GLOBALS['per_page'] = $perPage;
-            $GLOBALS['page'] = $page;
-            
-            // Get folder ID from slug
             $folderId = $this->folderService->getFolderId($folder);
-            $GLOBALS['folder_id'] = $folderId;
+            
+            // First get ALL matching release IDs from search index
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT release_id 
+                FROM collection_search 
+                WHERE user_id = :user_id 
+                AND (
+                    LOWER(title) LIKE :query 
+                    OR LOWER(artist) LIKE :query 
+                    OR LOWER(label) LIKE :query
+                )
+            ");
 
-            // Filter the collection based on search query
-            if ($collection && isset($collection['releases'])) {
-                $query = strtolower($query);
-                $this->logger->info("Starting search", [
-                    'query' => $query,
-                    'total_releases' => count($collection['releases'])
-                ]);
+            $searchQuery = '%' . $query . '%';
+            $stmt->execute([
+                ':user_id' => $_SESSION['user_id'],
+                ':query' => $searchQuery
+            ]);
 
-                $filtered = array_filter($collection['releases'], function($release) use ($query) {
-                    $basic = $release['basic_information'];
-                    
-                    // Search in title
-                    if (isset($basic['title'])) {
-                        if (stripos($basic['title'], $query) !== false) {
-                            return true;
-                        }
-                    }
-                    
-                    // Search in all artist names
-                    if (isset($basic['artists']) && is_array($basic['artists'])) {
-                        foreach ($basic['artists'] as $artist) {
-                            if (isset($artist['name'])) {
-                                if (stripos($artist['name'], $query) !== false) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Search in all label names
-                    if (isset($basic['labels']) && is_array($basic['labels'])) {
-                        foreach ($basic['labels'] as $label) {
-                            if (isset($label['name'])) {
-                                if (stripos($label['name'], $query) !== false) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    
-                    return false;
-                });
+            $allMatchingIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $total = count($allMatchingIds);
 
-                $total = count($filtered);
-                $this->logger->info("Search complete", [
-                    'query' => $query,
-                    'matches' => $total
-                ]);
+            // Calculate pagination
+            $offset = ($page - 1) * $perPage;
+            $pageMatchingIds = array_slice($allMatchingIds, $offset, $perPage);
 
-                $total_pages = ceil($total / $perPage);
-                $offset = ($page - 1) * $perPage;
+            // Get the FULL collection data using CacheService
+            $cacheKey = "collection_{$_SESSION['user_id']}_0_added_desc_1_999999";
+            $fullCollection = $this->cacheService->getCachedCollection($cacheKey);
+            
+            if (!$fullCollection || !isset($fullCollection['releases'])) {
+                throw new Exception('Failed to get collection data');
+            }
 
-                $collection['releases'] = array_slice(array_values($filtered), $offset, $perPage);
-                $collection['pagination'] = [
+            // Create a lookup array for faster matching
+            $matchingReleases = [];
+            foreach ($fullCollection['releases'] as $release) {
+                if (in_array($release['id'], $pageMatchingIds)) {
+                    $matchingReleases[] = $release;
+                }
+            }
+
+            // Create the collection array with our filtered results
+            $collection = [
+                'releases' => $matchingReleases,
+                'pagination' => [
                     'items' => $total,
                     'page' => $page,
-                    'pages' => $total_pages,
+                    'pages' => ceil($total / $perPage),
                     'per_page' => $perPage
-                ];
-            }
+                ]
+            ];
+
+            $this->logger->info("Search complete", [
+                'query' => $query,
+                'matches' => $total,
+                'page_matches' => count($matchingReleases)
+            ]);
 
             echo $this->twig->render('release_gallery.html.twig', [
                 'collection' => $collection,
@@ -192,11 +201,68 @@ class CollectionController {
                 'per_page' => $perPage,
                 'search_query' => $query
             ]);
+
         } catch (Exception $e) {
             $this->logger->error('Error searching collection: ' . $e->getMessage());
             echo $this->twig->render('error.html.twig', [
                 'error' => 'An error occurred while searching the collection.'
             ]);
+        }
+    }
+
+    /**
+     * Updates the search index for a user's collection
+     */
+    private function updateSearchIndex($userId, $releases) {
+        try {
+            // Start transaction
+            $this->db->beginTransaction();
+
+            // Clear existing entries for this user
+            $stmt = $this->db->prepare("
+                DELETE FROM collection_search WHERE user_id = :user_id
+            ");
+            $stmt->execute([':user_id' => $userId]);
+
+            // Prepare insert statement
+            $stmt = $this->db->prepare("
+                INSERT INTO collection_search 
+                (release_id, user_id, title, artist, label)
+                VALUES (:release_id, :user_id, :title, :artist, :label)
+            ");
+
+            foreach ($releases as $release) {
+                $basic = $release['basic_information'];
+                $artists = array_map(function($a) { 
+                    return $a['name']; 
+                }, $basic['artists']);
+                
+                $labels = array_map(function($l) { 
+                    return $l['name']; 
+                }, $basic['labels'] ?? []);
+
+                $stmt->execute([
+                    ':release_id' => $release['id'],
+                    ':user_id' => $userId,
+                    ':title' => strtolower($basic['title']),
+                    ':artist' => strtolower(implode(', ', $artists)),
+                    ':label' => strtolower(implode(', ', $labels))
+                ]);
+            }
+
+            // Commit transaction
+            $this->db->commit();
+            
+            $this->logger->info("Search index updated", [
+                'user_id' => $userId,
+                'releases_indexed' => count($releases)
+            ]);
+
+        } catch (Exception $e) {
+            // Rollback on error
+            $this->db->rollBack();
+            $this->logger->error("Failed to update search index: " . $e->getMessage());
+            throw $e;
         }
     }
 } 
