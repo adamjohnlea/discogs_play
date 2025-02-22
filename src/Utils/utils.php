@@ -13,7 +13,7 @@ $sort_by = "added";
 $order = "desc";
 //$artistid = "";
 $page = "1";
-$per_page = "20";
+$per_page = "24";
 $release_id = "";
 
 // GET ATTRIBUTES FROM URL
