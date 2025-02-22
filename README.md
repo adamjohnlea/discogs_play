@@ -23,6 +23,13 @@ A web application for browsing and managing your Discogs record collection. Buil
   - Adjustable items per page (25/50/100)
   - Persistent view preferences
 
+- **Fast Search**:
+  - Search by title, artist, or label
+  - Full-text search with SQLite
+  - Instant results from local cache
+  - Smart pagination of search results
+  - Search across entire collection
+
 - **Release Details**:
   - High-quality cover art display
   - Multiple release images in carousel
@@ -36,6 +43,7 @@ A web application for browsing and managing your Discogs record collection. Buil
   - 24-hour collection cache for optimal performance
   - Intelligent release data caching
   - Local image caching for fast loading
+  - Local search index for quick results
   - Manual cache refresh option
 
 - **SEO-friendly URLs**:
@@ -46,7 +54,7 @@ A web application for browsing and managing your Discogs record collection. Buil
 
 ## Requirements
 
-- PHP 8.0 or higher
+- PHP 8.3 or higher
 - SQLite 3
 - Composer
 - Web server (Apache/Nginx) with URL rewriting support
@@ -109,8 +117,9 @@ The application implements several caching layers:
 - **Collection Cache**: Caches your collection list for 24 hours
 - **Release Cache**: Caches individual release details
 - **Image Cache**: Caches cover art and additional images locally
+- **Search Index**: Maintains a local search index for fast queries
 
-To clear the cache:
+To clear the cache and rebuild search index:
 1. Visit the settings page
 2. Click "Refresh Collection Data"
 
