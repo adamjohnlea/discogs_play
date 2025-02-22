@@ -40,15 +40,6 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
                     {% if is_granted('ROLE_USER') %}
-                        <!-- Command Palette Trigger -->
-                        <li class="nav-item me-3">
-                            <button class="btn btn-outline-secondary search-like-button" onclick="activateCommandPalette(event)">
-                                <i class="fa-solid fa-magnifying-glass me-2"></i>
-                                <span class="search-placeholder">Search or filter...</span>
-                                <small class="text-muted ms-2">⌘K</small>
-                            </button>
-                        </li>
-
                         <!-- Navigation Items -->
                         <li class="nav-item">
                             <a class="nav-link" href="/" title="Home">
