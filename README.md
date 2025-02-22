@@ -1,178 +1,157 @@
-<h1>Discogs Collection Player</h1>
+# Discogs Collection Player
 
-<p>A PHP web application for browsing and managing your Discogs record collection with a clean, modern interface.</p>
+A web application for browsing and managing your Discogs record collection. Built with PHP and modern web technologies.
 
-<h2>Features</h2>
-<ul>
-    <li>Modern Command Palette Interface:
-        <ul>
-            <li>Keyboard-first navigation (⌘K/Ctrl+K)</li>
-            <li>Quick access to all collection controls</li>
-            <li>Fuzzy search through commands</li>
-            <li>Beautiful backdrop blur effects</li>
-        </ul>
-    </li>
-    <li>User Authentication:
-        <ul>
-            <li>Secure user registration and login</li>
-            <li>Remember me functionality</li>
-            <li>Password security with modern hashing</li>
-        </ul>
-    </li>
-    <li>Discogs Integration:
-        <ul>
-            <li>Personal access token authentication</li>
-            <li>Automatic synchronization with your Discogs collection</li>
-            <li>Manual refresh option for immediate updates</li>
-        </ul>
-    </li>
-    <li>Smart Caching System:
-        <ul>
-            <li>24-hour collection cache for optimal performance</li>
-            <li>Permanent caching of release data and images</li>
-            <li>Manual cache refresh via settings</li>
-        </ul>
-    </li>
-    <li>Modern Collection Interface:
-        <ul>
-            <li>Responsive design for all devices</li>
-            <li>Smart pagination with ellipsis for large collections</li>
-            <li>Smooth animations and transitions</li>
-            <li>Dark theme optimized</li>
-        </ul>
-    </li>
-    <li>View detailed release information including:
-        <ul>
-            <li>Cover art and additional release images</li>
-            <li>Track listings</li>
-            <li>Release notes and credits</li>
-            <li>Label and format information</li>
-        </ul>
-    </li>
-    <li>Powerful Collection Management:
-        <ul>
-            <li>Sort by date added or artist name</li>
-            <li>Filter by Discogs folders</li>
-            <li>Adjustable items per page (25/50/100)</li>
-            <li>Persistent view preferences</li>
-        </ul>
-    </li>
-    <li>SEO-friendly URLs</li>
-</ul>
+## Features
 
-<h2>URL Structure</h2>
-<p>The application uses clean, SEO-friendly URLs:</p>
-<ul>
-    <li>Home: <code>/</code></li>
-    <li>Authentication: <code>/login</code>, <code>/register</code></li>
-    <li>Settings: <code>/settings</code></li>
-    <li>Collection view: <code>/folder/{folder-name}</code></li>
-    <li>Sorted view: <code>/folder/{folder-name}/sort/{field}/{direction}/page/{number}?per_page={count}</code></li>
-    <li>Release view: <code>/release/{id}/{artist-name}/{release-title}</code></li>
-</ul>
+- **Modern Interface**:
+  - Responsive design for all devices
+  - Smart pagination with ellipsis for large collections
+  - Smooth animations and transitions
+  - Dark theme optimized
+  - Beautiful UI with Bootstrap 5
 
-<h2>Technical Stack</h2>
-<ul>
-    <li>PHP 8.3+</li>
-    <li>Twig templating engine</li>
-    <li>Bootstrap 5 for styling</li>
-    <li>Font Awesome icons</li>
-    <li>Laravel Herd for local development</li>
-    <li>SQLite for data storage</li>
-</ul>
+- **OAuth Authentication**:
+  - Secure connection to your Discogs account
+  - Automatic token refresh handling
+  - Clear connection status indicators
 
-<h2>Installation</h2>
-<ol>
-    <li>Clone the repository</li>
-    <li>Install dependencies:
-        <pre><code>composer install</code></pre>
-    </li>
-    <li>Copy <code>config/config.example.php</code> to <code>config/config.php</code> and update with your settings</li>
-    <li>Set up the database:
-        <pre><code>./bin/migrate migrate</code></pre>
-    </li>
-    <li>Ensure the following directories are writable:
-        <ul>
-            <li><code>cache/</code></li>
-            <li><code>public/img/covers/</code></li>
-            <li><code>public/img/releases/</code></li>
-            <li><code>database/</code></li>
-            <li><code>logs/</code></li>
-        </ul>
-    </li>
-</ol>
+- **Collection Management**:
+  - View your entire Discogs collection
+  - Sort by date added, artist, or title
+  - Filter by Discogs folders
+  - Adjustable items per page (25/50/100)
+  - Persistent view preferences
 
-<h2>Configuration</h2>
-<p>The application requires the following configuration in <code>config/config.php</code>:</p>
-<ul>
-    <li>Application settings:
-        <ul>
-            <li>Application name</li>
-            <li>Environment (development/production)</li>
-        </ul>
-    </li>
-    <li>Cache settings:
-        <ul>
-            <li>Collection cache duration (default: 24 hours)</li>
-        </ul>
-    </li>
-    <li>Path configurations:
-        <ul>
-            <li>Templates directory</li>
-            <li>Public directory</li>
-            <li>Database location</li>
-        </ul>
-    </li>
-</ul>
+- **Release Details**:
+  - High-quality cover art display
+  - Multiple release images in carousel
+  - Detailed track listings
+  - Release information and credits
+  - Label and format details
+  - Personal notes and condition ratings
+  - Direct links to Discogs
 
-<h2>Directory Structure</h2>
-<pre>
-├── cache/              # Twig template cache
-├── config/             # Configuration files
-├── database/           # SQLite database
-├── public/             # Web root
-│   ├── css/           # Stylesheets
-│   ├── js/            # JavaScript files
-│   ├── img/           # Image storage
-│   └── index.php      # Application entry point
-├── src/               # Application source code
-│   ├── Controllers/   # Application controllers
-│   ├── Database/      # Database migrations
-│   ├── Functions/     # Helper functions
-│   ├── Middleware/    # Application middleware
-│   ├── Models/        # Data models
-│   ├── Services/      # Service classes
-│   └── Utils/         # Utility functions
-└── templates/         # Twig templates
-    ├── auth/          # Authentication templates
-    ├── layouts/       # Base templates
-    └── partials/      # Reusable template parts
-</pre>
+- **Smart Caching System**:
+  - 24-hour collection cache for optimal performance
+  - Intelligent release data caching
+  - Local image caching for fast loading
+  - Manual cache refresh option
 
-<h2>Development</h2>
-<p>The project uses Laravel Herd for local development. To start developing:</p>
-<ol>
-    <li>Ensure Laravel Herd is installed and running</li>
-    <li>Configure a new site in Herd pointing to the project's public directory</li>
-    <li>Access the site at <code>http://your-site-name.test</code></li>
-</ol>
+- **SEO-friendly URLs**:
+  - Clean, readable URLs
+  - Artist and release names in URLs
+  - Proper folder naming in paths
+  - Semantic URL structure
 
-<h2>Command Line Tools</h2>
-<p>The application includes several useful command-line tools:</p>
-<ul>
-    <li><code>./bin/migrate migrate</code> - Set up or update the database schema</li>
-    <li><code>./bin/migrate rollback</code> - Roll back the last database migration</li>
-    <li><code>./bin/clear-cache</code> - Clear the release and image cache</li>
-    <li><code>./bin/view-logs</code> - View application logs (accepts optional line count and filter parameters)</li>
-</ul>
+## Requirements
 
-<h2>Credits</h2>
-<p>This application uses the following open-source packages:</p>
-<ul>
-    <li>Twig templating engine</li>
-    <li>Bootstrap 5</li>
-    <li>Font Awesome</li>
-</ul>
+- PHP 8.0 or higher
+- SQLite 3
+- Composer
+- Web server (Apache/Nginx) with URL rewriting support
 
-<h2>License</h2>
-<p>This project is licensed under the MIT License - see the LICENSE file for details.</p>
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/discogs_play.git
+   cd discogs_play
+   ```
+
+2. Install dependencies:
+   ```bash
+   composer install
+   ```
+
+3. Copy the example environment file and configure it:
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and add your Discogs OAuth credentials:
+   ```
+   DISCOGS_OAUTH_KEY=your_oauth_consumer_key
+   DISCOGS_OAUTH_SECRET=your_oauth_consumer_secret
+   DISCOGS_OAUTH_CALLBACK=https://your-domain.com/oauth/callback
+   ```
+
+4. Copy the example config file and configure it:
+   ```bash
+   cp config/config.example.php config/config.php
+   ```
+
+5. Set up the database:
+   ```bash
+   ./bin/migrate migrate
+   ```
+
+6. Ensure the following directories are writable by your web server:
+   - `cache/`
+   - `public/img/covers/`
+   - `public/img/releases/`
+   - `database/`
+   - `logs/`
+
+7. Configure your web server to point to the `public/` directory
+
+## Usage
+
+1. Register for an account on the application
+2. Log in to your account
+3. Click "Connect with Discogs" on the settings page
+4. Authorize the application with your Discogs account
+5. Browse your collection!
+
+## Cache Management
+
+The application implements several caching layers:
+
+- **Collection Cache**: Caches your collection list for 24 hours
+- **Release Cache**: Caches individual release details
+- **Image Cache**: Caches cover art and additional images locally
+
+To clear the cache:
+1. Visit the settings page
+2. Click "Refresh Collection Data"
+
+## Development
+
+### Directory Structure
+
+- `bin/` - Command line tools
+- `cache/` - Cache storage
+- `config/` - Configuration files
+- `database/` - SQLITE database
+- `logs/` - Application logs
+- `public/` - Public web root
+- `src/` - Application source code
+  - `Controllers/` - Application controllers
+  - `Database/` - Database migrations and models
+  - `Functions/` - Helper functions
+  - `Middleware/` - Middleware classes
+  - `Models/` - Model classes
+  - `Services/` - Service classes
+  - `TwigExtensions/` - Twig extensions
+  - `Utils/` - Utility classes
+- `templates/` - Twig templates
+  - `auth/` - Authentication templates
+  - `layouts/` - Layout templates
+  - `partials/` - Partial templates
+
+### Database Migrations
+
+To create a new migration:
+1. Add a new migration class in `src/Database/Migrations/`
+2. Register the migration in `bin/migrate`
+3. Run `./bin/migrate migrate`
+
+## Security
+
+- All sensitive credentials are stored in `.env` (not in version control)
+- OAuth tokens are securely stored in the database
+- User passwords are hashed using modern algorithms
+- Session management with secure defaults
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
