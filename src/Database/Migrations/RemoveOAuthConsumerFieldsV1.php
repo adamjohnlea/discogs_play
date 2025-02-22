@@ -1,23 +1,17 @@
 <?php
 
-class AddOAuthFieldsToUserSettingsV1 {
+class RemoveOAuthConsumerFieldsV1 {
     public function up($db) {
-        // Add OAuth fields one at a time to avoid SQLite limitations
-        $db->exec("ALTER TABLE user_settings ADD COLUMN oauth_consumer_key TEXT");
-        $db->exec("ALTER TABLE user_settings ADD COLUMN oauth_consumer_secret TEXT");
-        $db->exec("ALTER TABLE user_settings ADD COLUMN oauth_access_token TEXT");
-        $db->exec("ALTER TABLE user_settings ADD COLUMN oauth_access_token_secret TEXT");
-        $db->exec("ALTER TABLE user_settings ADD COLUMN oauth_token_expiry DATETIME");
-    }
-
-    public function down($db) {
-        // Create a new temporary table without OAuth columns
+        // Create a new temporary table without consumer fields
         $db->exec("
             CREATE TABLE user_settings_temp (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 discogs_username TEXT UNIQUE,
                 discogs_token TEXT,
+                oauth_access_token TEXT,
+                oauth_access_token_secret TEXT,
+                oauth_token_expiry DATETIME,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -27,7 +21,9 @@ class AddOAuthFieldsToUserSettingsV1 {
         // Copy data to temporary table
         $db->exec("
             INSERT INTO user_settings_temp 
-            SELECT id, user_id, discogs_username, discogs_token, created_at, updated_at 
+            SELECT id, user_id, discogs_username, discogs_token, 
+                   oauth_access_token, oauth_access_token_secret, oauth_token_expiry,
+                   created_at, updated_at 
             FROM user_settings
         ");
 
@@ -39,5 +35,11 @@ class AddOAuthFieldsToUserSettingsV1 {
 
         // Recreate the index
         $db->exec("CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id)");
+    }
+
+    public function down($db) {
+        // If we need to roll back, add the columns back
+        $db->exec("ALTER TABLE user_settings ADD COLUMN oauth_consumer_key TEXT");
+        $db->exec("ALTER TABLE user_settings ADD COLUMN oauth_consumer_secret TEXT");
     }
 } 

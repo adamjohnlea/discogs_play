@@ -16,6 +16,9 @@ Migration::register(new CreateUsersTableV1($db));
 Migration::register(new CreateUserSettingsTableV1($db));
 Migration::register(new CreateCacheTablesV1($db));
 Migration::register(new CreateImagePathsV1($db));
+Migration::register(new AddOAuthFieldsToUserSettingsV1($db));
+Migration::register(new RemoveOAuthConsumerFieldsV1($db));
+Migration::register(new RemovePatFieldsFromUserSettingsV1($db));
 
 $command = $argv[1] ?? 'help';
 

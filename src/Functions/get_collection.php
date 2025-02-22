@@ -12,8 +12,10 @@ function get_collection() {
     
     require_once __DIR__ . '/../Services/DiscogsService.php';
     require_once __DIR__ . '/../Services/CacheService.php';
+    require_once __DIR__ . '/../Services/LogService.php';
     $discogsService = new DiscogsService($config);
     $cacheService = new CacheService($config);
+    $logger = LogService::getInstance($config);
     
     try {
         // Include user_id in the cache key to separate collections by user
@@ -42,6 +44,10 @@ function get_collection() {
         if ($pagedata === false) {
             // Check if we got rate limited
             $headers = get_headers($url, 1);
+            $logger->error('Failed to fetch collection from Discogs API', [
+                'headers' => $headers
+            ]);
+            
             if (isset($headers[0]) && strpos($headers[0], '429') !== false) {
                 return [
                     'error' => 'Rate limit exceeded. Please try again in a moment.',
@@ -61,6 +67,7 @@ function get_collection() {
         // decode the JSON feed
         $data = json_decode($pagedata, true);
         if ($data === null) {
+            $logger->error('Invalid JSON response from Discogs API');
             return [
                 'error' => 'Invalid response from Discogs. Please try again.',
                 'releases' => [],
@@ -71,16 +78,12 @@ function get_collection() {
         // Add user_id to the data for validation
         $data['user_id'] = $_SESSION['user_id'];
         
-        $cacheStats = ['cached' => 0, 'uncached' => 0];
-        
         // For each release in the collection, check if we have it cached
         foreach ($data['releases'] as &$release) {
             $releaseId = $release['id'];
             $cachedData = $cacheService->getCachedRelease($releaseId);
             
             if ($cachedData && $cacheService->isReleaseCacheValid($releaseId, true)) {
-                $cacheStats['cached']++;
-                
                 // Keep the collection-specific data
                 $collectionData = [
                     'instance_id' => $release['instance_id'],
@@ -108,8 +111,6 @@ function get_collection() {
                     $release[$key] = $value;
                 }
             } else {
-                $cacheStats['uncached']++;
-                
                 // Cache the basic info with the basic data flag
                 $cacheService->cacheRelease($releaseId, $release['basic_information'], null, true);
             }
@@ -120,7 +121,7 @@ function get_collection() {
 
         return $data;
     } catch (Exception $e) {
-        error_log("Error in get_collection: " . $e->getMessage());
+        $logger->error('Error in get_collection: ' . $e->getMessage());
         return [
             'error' => 'An error occurred. Please try again.',
             'releases' => [],

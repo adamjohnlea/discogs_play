@@ -1,0 +1,153 @@
+---
+description: AI Rules for Discogs Collection Player
+globs: 
+---
+
+This document outlines the specific rules and guidelines for AI interactions with this project. These rules ensure consistency and maintain project standards.
+
+## Project Structure Rules
+
+1. Always maintain the established directory structure:
+   - Keep controllers in `src/Controllers/`
+   - Keep models in `src/Models/`
+   - Keep templates in `templates/`
+   - Keep public assets in `public/`
+   - Keep configuration in `config/`
+
+2. Follow the established URL structure:
+   - Home: `/`
+   - Authentication: `/login`, `/register`
+   - Settings: `/settings`
+   - Collection view: `/folder/{folder-name}`
+   - Release view: `/release/{id}/{artist-name}/{release-title}`
+
+## Code Style and Standards
+
+1. PHP Version Compatibility:
+   - All code must be compatible with PHP 8.3+
+   - Use modern PHP features and type hints
+
+2. Template Rules:
+   - Use Twig templating engine exclusively
+   - Place all templates in appropriate subdirectories under `templates/`
+   - Follow the established template hierarchy (layouts → partials)
+
+3. Frontend Standards:
+   - Use Bootstrap 5 for styling
+   - Maintain dark theme compatibility
+   - Ensure responsive design for all components
+   - Use Font Awesome for icons
+   - Follow established design aesthetics:
+     - Use consistent color schemes from existing UI
+     - Match existing component styles and animations
+     - Maintain the clean, modern interface design
+     - Use the same spacing and layout patterns
+     - Keep the same button styles and hover effects
+     - Follow existing card and container designs
+     - Use consistent typography and font sizes
+     - Match existing backdrop blur effects
+
+## Data Management
+
+1. Database Rules:
+   - Use SQLite as the database
+   - Database file must be located at `database/discogs.sqlite`
+   - All schema changes must be done through migrations
+   - Place migrations in `src/Database/`
+   - Before creating new queries or migrations:
+     - Study existing query patterns in the codebase
+     - Follow established migration naming and structure conventions
+     - Maintain consistency with existing database design patterns
+
+2. Caching Rules:
+   - Respect the 24-hour collection cache duration
+   - Use the established caching system for releases and images
+   - Store cached images in appropriate public directories:
+     - `public/img/covers/`
+     - `public/img/releases/`
+
+## Security Practices
+
+1. Authentication:
+   - Always use secure password hashing
+   - Never expose Discogs API tokens in code or logs
+   - Keep user authentication logic in dedicated controllers
+
+2. Configuration:
+   - Never commit sensitive configuration
+   - Use `config/config.example.php` as a template
+   - Maintain separate configurations for development/production
+
+## Error Handling
+
+1. Logging:
+   - Use the established logging system
+   - Store logs in the `logs/` directory
+   - Include appropriate context in error messages
+
+## Command Palette Interface
+
+1. Maintain keyboard-first navigation:
+   - Keep ⌘K/Ctrl+K as the primary shortcut
+   - Ensure all commands are accessible via the palette
+   - Maintain fuzzy search functionality
+
+## Performance
+
+1. Image Handling:
+   - Use the established caching system for images
+   - Optimize images before storage
+   - Maintain proper image directories
+
+2. API Integration:
+   - Respect Discogs API rate limits
+   - Use appropriate caching for API responses
+   - Handle API errors gracefully
+
+## Documentation
+
+1. Code Documentation:
+   - Document all public methods and classes
+   - Keep inline comments relevant and up-to-date
+   - Update README.md when adding new features
+
+2. URL Documentation:
+   - Maintain SEO-friendly URL structure
+   - Document new routes in README.md
+
+## Development Environment
+
+1. Local Development:
+   - Support Laravel Herd for local development
+   - Maintain development-specific configurations
+   - Use appropriate environment variables
+
+## Testing and Quality Assurance
+
+1. Before Making Changes:
+   - Verify PHP 8.3+ compatibility
+   - Ensure dark theme compatibility
+   - Test responsive design
+   - Verify command palette functionality
+
+## Feature Development
+
+1. Maintaining Existing Functionality:
+   - Never break or modify existing working features when adding new ones
+   - Ensure all existing routes continue to work as before
+   - Maintain backward compatibility with existing data structures
+   - Preserve existing user interface patterns and behaviors
+   - Test all related functionality before suggesting changes
+
+2. Feature Integration:
+   - New features should complement existing ones, not replace them
+   - Follow established patterns for similar features
+   - Maintain consistency with existing user experience
+   - Ensure new features work within the existing command palette system
+   - Match existing UI design aesthetics exactly:
+     - Use identical styling for similar components
+     - Keep visual hierarchy consistent
+     - Maintain the same level of polish and refinement
+     - Ensure new UI elements feel native to the application
+
+These rules should be followed for all AI interactions with the project to maintain consistency and quality. 

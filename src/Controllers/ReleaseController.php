@@ -49,56 +49,24 @@ class ReleaseController {
 
         $releaseInfo = null;
         $myReleaseInfo = null;
-        $cacheStatus = [];
 
         try {
             // Get user's Discogs username
             $userSettings = $this->discogsService->getUserCredentials($_SESSION['user_id']);
             $discogs_username = $userSettings['discogs_username'];
 
-            // Check cache first
-            $cachedData = $this->cacheService->getCachedRelease($release_id);
-            if ($cachedData && !$cachedData['is_basic_data'] && $this->cacheService->isReleaseCacheValid($release_id)) {
-                $releaseInfo = $cachedData['data'];
-                $myReleaseInfo = $cachedData['my_data'];
-                $cacheStatus['release'] = 'Using stored data';
-                $cacheStatus['cache_time'] = $cachedData['last_updated'];
-            } else {
-                // If not in cache or cache is invalid, fetch from API
-                $cacheStatus['release'] = 'Fetching and storing new data';
-                if ($cachedData && $cachedData['is_basic_data']) {
-                    $cacheStatus['reason'] = 'Basic data found, fetching full data';
-                } else if (!$cachedData) {
-                    $cacheStatus['reason'] = 'No cache entry found';
-                } else {
-                    $cacheStatus['reason'] = 'Invalid cache';
-                }
-                
-                $releaseInfo = get_release_information($release_id);
-                if (!$releaseInfo) {
-                    echo $this->twig->render('error.html.twig', [
-                        'error' => '404 Not Found'
-                    ]);
-                    return;
-                }
-                
-                $myReleaseInfo = get_my_release_information($release_id);
-                
-                // Store the data permanently
-                $this->cacheService->cacheRelease($release_id, $releaseInfo, $myReleaseInfo, false);
+            require_once __DIR__ . '/../Functions/get_release_info.php';
+            require_once __DIR__ . '/../Functions/get_my_release_info.php';
+            
+            $releaseInfo = get_release_info($release_id);
+            if (!$releaseInfo || isset($releaseInfo['error'])) {
+                echo $this->twig->render('error.html.twig', [
+                    'error' => $releaseInfo['error'] ?? '404 Not Found'
+                ]);
+                return;
             }
-
-            // Check image cache status
-            if (isset($releaseInfo['images'][0])) {
-                $firstImage = $releaseInfo['images'][0];
-                $cachedImage = $this->cacheService->getCachedImage($release_id, 'cover', $firstImage['resource_url']);
-                if ($cachedImage) {
-                    $cacheStatus['cover_image'] = 'Using stored image';
-                    $cacheStatus['image_cache_time'] = $cachedImage['last_updated'];
-                } else {
-                    $cacheStatus['cover_image'] = 'Storing new image';
-                }
-            }
+            
+            $myReleaseInfo = get_my_release_information($release_id);
             
             echo $this->twig->render('release.html.twig', [
                 'releaseInfo' => $releaseInfo,

@@ -6,6 +6,9 @@
 # Configuration
 config/config.php
 
+# Cursor IDE files
+.cursor/
+
 # Existing entries...
 vendor/
 .DS_Store

@@ -1,6 +1,6 @@
 <?php
 
-function get_release_information($release_id) {
+function get_release_info($release_id) {
     global $config;
     
     if (!isset($_SESSION['user_id'])) {
@@ -9,36 +9,57 @@ function get_release_information($release_id) {
     
     require_once __DIR__ . '/../Services/DiscogsService.php';
     require_once __DIR__ . '/../Services/CacheService.php';
+    require_once __DIR__ . '/../Services/LogService.php';
     $discogsService = new DiscogsService($config);
     $cacheService = new CacheService($config);
+    $logger = LogService::getInstance($config);
     
     try {
         // Check cache first
         $cachedData = $cacheService->getCachedRelease($release_id);
-        if ($cachedData && !$cachedData['is_basic_data'] && $cacheService->isReleaseCacheValid($release_id)) {
+        if ($cachedData && $cacheService->isReleaseCacheValid($release_id)) {
             return $cachedData['data'];
         }
         
-        // Fetch full data from API
+        // If not in cache or cache is invalid, fetch from Discogs
         $url = $discogsService->buildUrl("/releases/{$release_id}");
         $context = $discogsService->getApiContext($_SESSION['user_id']);
         
-        $response = @file_get_contents($url, false, $context);
-        if ($response === false) {
-            return null;
+        $pagedata = @file_get_contents($url, false, $context);
+        
+        if ($pagedata === false) {
+            $headers = get_headers($url, 1);
+            $logger->error('Failed to fetch release from Discogs API', [
+                'headers' => $headers
+            ]);
+            
+            if (isset($headers[0]) && strpos($headers[0], '429') !== false) {
+                return [
+                    'error' => 'Rate limit exceeded. Please try again in a moment.'
+                ];
+            }
+            
+            return [
+                'error' => 'Failed to fetch release information. Please try again.'
+            ];
         }
         
-        $data = json_decode($response, true);
-        if (!$data) {
-            return null;
+        $data = json_decode($pagedata, true);
+        if ($data === null) {
+            $logger->error('Invalid JSON response from Discogs API');
+            return [
+                'error' => 'Invalid response from Discogs. Please try again.'
+            ];
         }
         
-        // Cache the full data with is_basic_data set to false
-        $cacheService->cacheRelease($release_id, $data, null, false);
+        // Cache the release data
+        $cacheService->cacheRelease($release_id, $data);
         
         return $data;
     } catch (Exception $e) {
-        error_log("Error getting release info: " . $e->getMessage());
-        return null;
+        $logger->error('Error in get_release_info: ' . $e->getMessage());
+        return [
+            'error' => 'An error occurred. Please try again.'
+        ];
     }
 }

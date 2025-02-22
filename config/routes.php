@@ -23,7 +23,6 @@ return function($router) {
     
     // Settings routes
     $router->add('/settings', ['SettingsController', 'show']);
-    $router->add('/settings', ['SettingsController', 'update'], 'POST');
     $router->add('/refresh-collection', ['SettingsController', 'refreshCollection'], 'POST');
     
     // Release view - support both formats
@@ -33,7 +32,7 @@ return function($router) {
     // Collection view with clean URLs for folder, sorting, and pagination
     $router->add('/folder/:folder/sort/:field/:direction/page/:page', ['ReleaseController', 'showCollection']);
     
-    // Collection search routes (new)
+    // Collection search routes
     $router->add('/folder/:folder/search/:query/page/:page', ['ReleaseController', 'searchCollection']);
     $router->add('/folder/:folder/search/:query', ['ReleaseController', 'searchCollection']);
     
@@ -42,6 +41,6 @@ return function($router) {
     $router->add('/folder/:folder/sort/:field/:direction', ['ReleaseController', 'showCollection']);
     $router->add('/folder/:folder', ['ReleaseController', 'showCollection']);
     
-    // Root path - now uses HomeController
+    // Root path
     $router->add('/', ['HomeController', 'index']);
 }; 
