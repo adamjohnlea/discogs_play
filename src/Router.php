@@ -115,10 +115,11 @@ class Router {
     }
 
     private function standardizeParams($params, $queryParams) {
-        $standardParams = $queryParams;
+        $standardParams = [];
         
-        // Convert folder slug to ID if present
+        // Convert folder slug to ID if present and preserve the slug
         if (isset($params['folder'])) {
+            $standardParams['folder'] = $params['folder'];
             $standardParams['folder_id'] = $this->folderService->getFolderId($params['folder']);
         }
         
@@ -133,6 +134,31 @@ class Router {
         // Map page parameter
         if (isset($params['page'])) {
             $standardParams['page'] = $params['page'];
+        }
+        
+        // Merge in query parameters, but URL parameters take precedence
+        foreach ($queryParams as $key => $value) {
+            if (!isset($standardParams[$key])) {
+                $standardParams[$key] = $value;
+            }
+        }
+        
+        // Set defaults if not present
+        if (!isset($standardParams['folder_id'])) {
+            $standardParams['folder_id'] = '0';
+            $standardParams['folder'] = 'all';
+        }
+        if (!isset($standardParams['sort_by'])) {
+            $standardParams['sort_by'] = 'added';
+        }
+        if (!isset($standardParams['order'])) {
+            $standardParams['order'] = 'desc';
+        }
+        if (!isset($standardParams['page'])) {
+            $standardParams['page'] = '1';
+        }
+        if (!isset($standardParams['per_page'])) {
+            $standardParams['per_page'] = '25';
         }
         
         return $standardParams;

@@ -1,9 +1,10 @@
 <!-- Collection Controls -->
 <div class="collection-controls d-flex justify-content-center p-3">
     {% if release_id is not defined or not release_id %}
+        {% set current_folder = app.request.attributes.get('folder') ?? folder ?? 'all' %}
         <div class="modern-pagination" role="navigation" aria-label="Pagination">
             <a class="page-btn page-nav {{ page == 1 ? 'disabled' : '' }}" 
-               href="{{ page_url(page - 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order, 'per_page': per_page}) }}" 
+               href="{{ sort_url(sort_by, order, {'folder': current_folder, 'page': page - 1, 'per_page': per_page}) }}" 
                {% if page == 1 %}aria-disabled="true"{% endif %}
                aria-label="Previous page">
                &#12298;
@@ -19,7 +20,7 @@
                         (x >= page - 1 and x <= page + 1)
                     %}
                         <a class="page-btn {{ page == x ? 'active' : '' }} {{ page == x ? 'disabled' : '' }}"
-                           href="{{ page_url(x, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order, 'per_page': per_page}) }}"
+                           href="{{ sort_url(sort_by, order, {'folder': current_folder, 'page': x, 'per_page': per_page}) }}"
                            {% if page == x %}aria-current="page"{% endif %}
                            aria-label="Page {{ x }}">
                             {{ x }}
@@ -31,7 +32,7 @@
             {% endif %}
 
             <a class="page-btn page-nav {{ page == collection.pagination.pages ? 'disabled' : '' }}"
-               href="{{ page_url(page + 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order, 'per_page': per_page}) }}"
+               href="{{ sort_url(sort_by, order, {'folder': current_folder, 'page': page + 1, 'per_page': per_page}) }}"
                {% if page == collection.pagination.pages %}aria-disabled="true"{% endif %}
                aria-label="Next page">
                &#12299;

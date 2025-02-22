@@ -122,11 +122,15 @@ class ReleaseController {
         $collection = get_collection();
         $folders = get_folders();
         
+        // Get the folder slug from the URL parameters or default to 'all'
+        $folder = $GLOBALS['folder'] ?? 'all';
+        
         echo $this->twig->render('release_gallery.html.twig', [
             'collection' => $collection,
             'folders' => $folders,
             'page' => $GLOBALS['page'] ?? 1,
             'folder_id' => $GLOBALS['folder_id'] ?? '0',
+            'folder' => $folder,
             'sort_by' => $GLOBALS['sort_by'] ?? 'added',
             'order' => $GLOBALS['order'] ?? 'desc',
             'per_page' => $GLOBALS['per_page'] ?? 25
