@@ -57,6 +57,12 @@
 
         {% block content %}{% endblock %}
 
+        {% if collection is defined %}
+            <div class="collection-controls d-flex justify-content-center p-3">
+                {% include 'partials/pagination.html.twig' %}
+            </div>
+        {% endif %}
+
         {% block footer %}
             {% include 'partials/footer.html.twig' %}
         {% endblock %}

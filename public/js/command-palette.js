@@ -131,17 +131,6 @@ class CommandPalette {
 
         // Click outside to close
         this.palette.querySelector('.command-palette-overlay').addEventListener('click', () => this.close());
-
-        // Add trigger button
-        const triggerButton = document.createElement('button');
-        triggerButton.className = 'command-palette-trigger btn btn-primary';
-        triggerButton.innerHTML = `
-            <span class="command-palette-trigger-icon">⌘</span>
-            <span class="command-palette-trigger-text">Search or filter...</span>
-            <kbd class="command-palette-trigger-shortcut">⌘K</kbd>
-        `;
-        triggerButton.addEventListener('click', () => this.toggle());
-        document.querySelector('.collection-controls')?.appendChild(triggerButton);
     }
 
     toggle() {
