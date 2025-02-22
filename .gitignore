@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Configuration
+config/config.php
+
 # Existing entries...
 vendor/
 .DS_Store
