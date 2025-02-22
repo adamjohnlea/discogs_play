@@ -1,3 +1,12 @@
+function activateCommandPalette(event) {
+    event.preventDefault();
+    document.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'k',
+        metaKey: true,
+        bubbles: true
+    }));
+}
+
 class CommandPalette {
     constructor() {
         this.isOpen = false;
