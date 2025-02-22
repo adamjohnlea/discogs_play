@@ -1,0 +1,30 @@
+/* Card component styling */
+.card {
+    background-color: var(--component-bg);
+    border: 1px solid var(--border-color);
+}
+
+.card-body {
+    background-color: var(--component-bg);
+}
+
+.card-footer {
+    background-color: var(--footer-bg);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Card images */
+.card-img-top {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    aspect-ratio: 1/1;
+    padding: 1rem;
+}
+
+/* List group items within cards */
+.list-group-item {
+    background-color: var(--component-bg);
+    border-color: var(--border-color);
+    color: var(--bs-body-color);
+} 
