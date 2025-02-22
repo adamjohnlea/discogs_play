@@ -226,7 +226,8 @@ class CommandPalette {
             order,
             page,
             perPage,
-            url
+            url,
+            params
         });
         
         window.location.href = url;

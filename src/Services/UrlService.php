@@ -38,8 +38,11 @@ class UrlService {
     public function sort($field, $direction, $currentParams = []) {
         global $folders;
         
-        $folder = 'all';
-        if (isset($currentParams['folder_id']) && $currentParams['folder_id'] !== '0') {
+        // First try to get the folder slug from the URL parameters
+        $folder = isset($currentParams['folder']) ? $currentParams['folder'] : 'all';
+        
+        // If no folder in URL params, try to get it from folder_id
+        if ($folder === 'all' && isset($currentParams['folder_id']) && $currentParams['folder_id'] !== '0') {
             // Look up the folder name from the global folders data
             if (isset($folders['folders']) && is_array($folders['folders'])) {
                 foreach ($folders['folders'] as $f) {
@@ -52,22 +55,30 @@ class UrlService {
         }
         
         $page = isset($currentParams['page']) ? $currentParams['page'] : 1;
+        $perPage = isset($currentParams['per_page']) && $currentParams['per_page'] !== '25' ? 
+            "?per_page={$currentParams['per_page']}" : '';
         
-        return "/folder/{$folder}/sort/{$field}/{$direction}/page/{$page}";
+        return "/folder/{$folder}/sort/{$field}/{$direction}/page/{$page}{$perPage}";
     }
 
     /**
      * Generate a URL for pagination
      */
     public function page($number, $currentParams = []) {
-        $folder = isset($currentParams['folder_id']) ? 
-            $this->folderService->getFolderSlug($currentParams['folder_id']) : 'all';
+        // First try to get the folder slug from the URL parameters
+        $folder = isset($currentParams['folder']) ? $currentParams['folder'] : 'all';
+        
+        // If no folder in URL params, try to get it from folder_id
+        if ($folder === 'all' && isset($currentParams['folder_id']) && $currentParams['folder_id'] !== '0') {
+            $folder = $this->folderService->getFolderSlug($currentParams['folder_id']);
+        }
         
         $field = $currentParams['sort_by'] ?? 'added';
         $direction = $currentParams['order'] ?? 'desc';
-        $perPage = $currentParams['per_page'] ?? '25';
+        $perPage = isset($currentParams['per_page']) && $currentParams['per_page'] !== '25' ? 
+            "?per_page={$currentParams['per_page']}" : '';
         
-        return "/folder/{$folder}/sort/{$field}/{$direction}/page/{$number}?per_page={$perPage}";
+        return "/folder/{$folder}/sort/{$field}/{$direction}/page/{$number}{$perPage}";
     }
 
     /**
