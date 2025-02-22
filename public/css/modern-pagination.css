@@ -1,71 +1,40 @@
 .modern-pagination {
     display: flex;
-    gap: 4px;
-    padding: 4px;
+    gap: 8px;
+    align-items: center;
 }
 
-.modern-pagination .page-btn {
+.modern-pagination .btn {
     min-width: 40px;
-    height: 40px;
+    height: 38px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 0 12px;
-    border: 1px solid var(--bs-border-color);
-    background: var(--bs-secondary-bg);
-    color: var(--bs-secondary-color);
-    border-radius: 8px;
     font-size: 14px;
-    transition: all 0.2s ease;
-    text-decoration: none;
 }
 
-.modern-pagination .page-btn:hover:not(.disabled) {
-    background: var(--bs-dark);
-    border-color: var(--bs-border-color);
-    color: var(--bs-body-color);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.modern-pagination .page-btn.active {
-    background: var(--bs-primary);
+.modern-pagination .btn.active {
+    background-color: var(--bs-primary);
     border-color: var(--bs-primary);
     color: white;
-    font-weight: 500;
 }
 
-.modern-pagination .page-btn.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.modern-pagination .page-nav {
-    font-size: 18px;
-    padding: 0 8px;
-}
-
-/* Smooth hover lift effect for all buttons */
-.modern-pagination .page-btn:not(.disabled) {
-    cursor: pointer;
-    will-change: transform;
+.modern-pagination .btn.disabled {
+    opacity: 0.65;
+    pointer-events: none;
 }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
     .modern-pagination {
-        gap: 2px;
+        gap: 4px;
     }
     
-    .modern-pagination .page-btn {
+    .modern-pagination .btn {
         min-width: 36px;
         height: 36px;
         padding: 0 8px;
         font-size: 13px;
-    }
-    
-    /* Hide some page numbers on mobile if there are too many */
-    .modern-pagination .page-btn.hide-mobile {
-        display: none;
     }
 } 

@@ -14,53 +14,70 @@
         {% set base_url = '/collection' %}
     {% endif %}
     
-    <div class="modern-pagination" role="navigation" aria-label="Pagination">
-        {% set prev_params = current_params|merge({'page': page - 1}) %}
-        <a class="page-btn page-nav {{ page == 1 ? 'disabled' : '' }}" 
-           href="{{ page == 1 ? '#' : base_url ~ '?' ~ prev_params|url_encode }}" 
-           {% if page == 1 %}aria-disabled="true"{% endif %}
-           aria-label="Previous page">
-           &#12298;
-        </a>
-        
-        {% if collection is defined %}
-            {% set total_pages = collection.pagination.pages %}
-            {% for x in 1..total_pages %}
-                {% if 
-                    x == 1 or 
-                    x == total_pages or 
-                    x == page or 
-                    (x >= page - 2 and x <= page + 2) or
-                    (x <= 3 and page <= 5) or
-                    (x >= total_pages - 2 and page >= total_pages - 4)
-                %}
-                    {% set page_params = current_params|merge({'page': x}) %}
-                    <a class="page-btn {{ page == x ? 'active' : '' }} {{ page == x ? 'disabled' : '' }}"
-                       href="{{ page == x ? '#' : base_url ~ '?' ~ page_params|url_encode }}"
-                       {% if page == x %}aria-current="page"{% endif %}
-                       aria-label="Page {{ x }}">
-                        {{ x }}
-                    </a>
-                {% elseif (x == page - 3 or x == page + 3) and not (
-                    (x <= 3 and page <= 5) or
-                    (x >= total_pages - 2 and page >= total_pages - 4)
-                ) %}
-                    <span class="page-btn disabled" aria-hidden="true">...</span>
-                {% endif %}
-            {% endfor %}
-            
-            {% if page < total_pages %}
-                {% set next_params = current_params|merge({'page': page + 1}) %}
-                <a class="page-btn page-nav" 
-                   href="{{ base_url ~ '?' ~ next_params|url_encode }}"
-                   aria-label="Next page">
-                   &#12299;
-                </a>
-            {% endif %}
-        {% endif %}
+    <div class="filter-bar mb-3">
+        <div class="container-fluid">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-auto">
+                    <div class="modern-pagination" role="navigation" aria-label="Pagination">
+                        {% set prev_params = current_params|merge({'page': page - 1}) %}
+                        <a class="btn btn-outline-secondary {{ page == 1 ? 'disabled' : '' }}" 
+                           href="{{ page == 1 ? '#' : base_url ~ '?' ~ prev_params|url_encode }}" 
+                           {% if page == 1 %}aria-disabled="true"{% endif %}
+                           aria-label="Previous page">
+                           <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                        
+                        {% if collection is defined %}
+                            {% set total_pages = collection.pagination.pages %}
+                            {% for x in 1..total_pages %}
+                                {% if 
+                                    x == 1 or 
+                                    x == total_pages or 
+                                    x == page or 
+                                    (x >= page - 2 and x <= page + 2) or
+                                    (x <= 3 and page <= 5) or
+                                    (x >= total_pages - 2 and page >= total_pages - 4)
+                                %}
+                                    {% set page_params = current_params|merge({'page': x}) %}
+                                    <a class="btn btn-outline-secondary {{ page == x ? 'active' : '' }} {{ page == x ? 'disabled' : '' }}"
+                                       href="{{ page == x ? '#' : base_url ~ '?' ~ page_params|url_encode }}"
+                                       {% if page == x %}aria-current="page"{% endif %}
+                                       aria-label="Page {{ x }}">
+                                        {{ x }}
+                                    </a>
+                                {% elseif (x == page - 3 or x == page + 3) and not (
+                                    (x <= 3 and page <= 5) or
+                                    (x >= total_pages - 2 and page >= total_pages - 4)
+                                ) %}
+                                    <span class="btn btn-outline-secondary disabled" aria-hidden="true">...</span>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page < total_pages %}
+                                {% set next_params = current_params|merge({'page': page + 1}) %}
+                                <a class="btn btn-outline-secondary" 
+                                   href="{{ base_url ~ '?' ~ next_params|url_encode }}"
+                                   aria-label="Next page">
+                                   <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 {% else %}
-    <div class="btn-group btn-group-sm mr-2 p-1" role="group">
-        <button type="button" class="btn btn-primary text-uppercase" onclick="history.go(-1)">Back to the Collection</button>
+    <div class="filter-bar mb-3">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <a href="javascript:history.go(-1)" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-arrow-left me-2"></i>
+                        Back to Collection
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 {% endif %} 
