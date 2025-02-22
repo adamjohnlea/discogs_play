@@ -71,6 +71,13 @@ class SettingsController {
             ");
             $stmt->execute();
 
+            // Clear search index for this user
+            $stmt = $this->db->prepare("
+                DELETE FROM collection_search 
+                WHERE user_id = :user_id
+            ");
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+
             $_SESSION['settings_success'] = 'Collection cache cleared. Your collection will refresh on next view.';
         } catch (Exception $e) {
             $this->logger->error('Failed to refresh collection');
