@@ -11,6 +11,10 @@ return function($router) {
     $router->add('/register', ['AuthController', 'register'], 'POST');
     $router->add('/login', ['AuthController', 'login'], 'POST');
     
+    // OAuth routes
+    $router->add('/oauth/start', ['OAuthController', 'start']);
+    $router->add('/oauth/callback', ['OAuthController', 'callback']);
+    
     // Profile routes
     $router->add('/profile', ['ProfileController', 'show']);
     $router->add('/profile/password', ['ProfileController', 'updatePassword'], 'POST');

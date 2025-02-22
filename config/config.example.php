@@ -18,7 +18,13 @@ return [
     ],
     'discogs' => [
         'api_url' => 'https://api.discogs.com',
-        'username' => 'YOUR_DISCOGS_USERNAME',
-        'token' => 'YOUR_DISCOGS_API_TOKEN', // Get this from https://www.discogs.com/settings/developers
+        'user_agent' => 'DiscogsPlayer/1.0',
+        // OAuth settings - these should be set in environment variables
+        'oauth_consumer_key' => getenv('DISCOGS_OAUTH_KEY'),
+        'oauth_consumer_secret' => getenv('DISCOGS_OAUTH_SECRET'),
+        'oauth_callback_url' => getenv('DISCOGS_OAUTH_CALLBACK') ?: 'https://discogs_play.test/oauth/callback'
+    ],
+    'cache' => [
+        'collection_duration' => 86400, // 24 hours
     ],
 ]; 

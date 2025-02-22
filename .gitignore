@@ -1,12 +1,16 @@
-.idea
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Existing entries...
+vendor/
 .DS_Store
-/vendor/
-/cache/
-/public/img/covers/*
-/public/img/releases/*
+*.log
+cache/*
+!cache/.gitkeep
+public/img/covers/*
 !public/img/covers/.gitkeep
+public/img/releases/*
 !public/img/releases/.gitkeep
-/logs/app.log
-!logs/.gitkeep
-/database/discogs.sqlite
-!database/.gitkeep
+database/*.sqlite
