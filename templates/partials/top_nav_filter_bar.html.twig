@@ -16,18 +16,20 @@
                         </button>
                         <ul class="dropdown-menu">
                             {% for f in folders.folders %}
-                                {% set folder_params = {
-                                    'folder': f.name|slugify,
-                                    'sort': sort_by,
-                                    'order': order,
-                                    'per_page': per_page
-                                } %}
-                                <li>
-                                    <a class="dropdown-item" href="/collection?{{ folder_params|url_encode }}">
-                                        {{ f.name }}
-                                        <span class="badge bg-secondary">{{ f.count }}</span>
-                                    </a>
-                                </li>
+                                {% if f.count > 0 %}
+                                    {% set folder_params = {
+                                        'folder': f.name|slugify,
+                                        'sort': sort_by,
+                                        'order': order,
+                                        'per_page': per_page
+                                    } %}
+                                    <li>
+                                        <a class="dropdown-item" href="/collection?{{ folder_params|url_encode }}">
+                                            {{ f.name }}
+                                            <span class="badge bg-secondary">{{ f.count }}</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
                             {% endfor %}
                         </ul>
                     </div>
