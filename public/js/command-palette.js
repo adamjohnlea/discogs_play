@@ -172,25 +172,24 @@ class CommandPalette {
     }
 
     navigate(params) {
-        const searchParams = new URLSearchParams(window.location.search);
-        
-        // Preserve current parameters that aren't being changed
-        if (!params.folder_id) searchParams.set('folder_id', this.currentFolder);
-        if (!params.sort_by) searchParams.set('sort_by', this.currentSort);
-        if (!params.order) searchParams.set('order', this.currentOrder);
-        if (!params.per_page) searchParams.set('per_page', this.currentPerPage);
-        
-        // Update with new parameters
-        Object.entries(params).forEach(([key, value]) => {
-            searchParams.set(key, value);
-        });
+        // Get current values from data attributes
+        const folder = params.folder_id || this.currentFolder;
+        const sort = params.sort_by || this.currentSort;
+        const order = params.order || this.currentOrder;
+        const perPage = params.per_page || this.currentPerPage;
         
         // Reset to page 1 when changing sort or per_page
-        if (params.sort_by || params.order || params.per_page) {
-            searchParams.set('page', '1');
+        const page = (params.sort_by || params.order || params.per_page) ? 1 : this.currentPage;
+        
+        // Build the URL in the format: /folder/{folder}/sort/{field}/{direction}/page/{page}
+        let url = `/folder/${folder === '0' ? 'all' : folder}/sort/${sort}/${order}/page/${page}`;
+        
+        // Add per_page as a query parameter
+        if (perPage !== '25') {
+            url += `?per_page=${perPage}`;
         }
-
-        window.location.search = searchParams.toString();
+        
+        window.location.href = url;
     }
 }
 
