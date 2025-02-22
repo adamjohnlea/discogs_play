@@ -3,11 +3,11 @@
 {% block title %}Welcome to {{ app_name }}{% endblock %}
 
 {% block content %}
-<div class="container my-5">
+<div class="container landing-hero">
     <div class="row align-items-center">
         <div class="col-lg-6">
-            <h1 class="display-4 mb-4">Manage Your Discogs Collection</h1>
-            <p class="lead mb-4">A beautiful way to browse, organize, and manage your vinyl collection through Discogs.</p>
+            <h1>Manage Your Discogs Collection</h1>
+            <p class="lead">A beautiful way to browse, organize, and manage your vinyl collection through Discogs.</p>
             
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4">
                 <a href="/register" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
@@ -16,49 +16,49 @@
             
             <div class="row g-4 py-4">
                 <div class="col-md-6">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3">
-                            <i class="fa-solid fa-record-vinyl fa-2x text-primary"></i>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-record-vinyl"></i>
                         </div>
-                        <div>
+                        <div class="feature-content">
                             <h5>Browse Your Collection</h5>
-                            <p class="text-muted">View your entire Discogs collection with a modern, responsive interface.</p>
+                            <p>View your entire Discogs collection with a modern, responsive interface.</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-md-6">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3">
-                            <i class="fa-solid fa-folder-open fa-2x text-primary"></i>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-folder-open"></i>
                         </div>
-                        <div>
+                        <div class="feature-content">
                             <h5>Organize by Folders</h5>
-                            <p class="text-muted">Keep your collection organized using Discogs folders.</p>
+                            <p>Keep your collection organized using Discogs folders.</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-md-6">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3">
-                            <i class="fa-solid fa-sort fa-2x text-primary"></i>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-sort"></i>
                         </div>
-                        <div>
+                        <div class="feature-content">
                             <h5>Smart Sorting</h5>
-                            <p class="text-muted">Sort your collection by artist, date added, and more.</p>
+                            <p>Sort your collection by artist, date added, and more.</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-md-6">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3">
-                            <i class="fa-solid fa-image fa-2x text-primary"></i>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-image"></i>
                         </div>
-                        <div>
+                        <div class="feature-content">
                             <h5>Cover Art</h5>
-                            <p class="text-muted">Beautiful cover art display with gallery and list views.</p>
+                            <p>Beautiful cover art display with gallery and list views.</p>
                         </div>
                     </div>
                 </div>
@@ -66,11 +66,9 @@
         </div>
         
         <div class="col-lg-6">
-            <div class="card bg-dark">
-                <div class="text-center p-4">
-                    <i class="fa-solid fa-record-vinyl fa-5x text-primary mb-3"></i>
-                    <h3 class="text-light">Your Collection Awaits</h3>
-                </div>
+            <div class="preview-card">
+                <i class="fa-solid fa-record-vinyl"></i>
+                <h3>Your Collection Awaits</h3>
             </div>
         </div>
     </div>

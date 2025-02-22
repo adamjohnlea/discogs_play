@@ -19,7 +19,7 @@
                 {% endif %}
 
                 <form method="POST" action="/register" id="registrationForm">
-                    <div class="mb-3">
+                    <div class="form-section">
                         <label for="username" class="form-label">Username</label>
                         <input type="text" class="form-control {% if errors.username is defined %}is-invalid{% endif %}" 
                                id="username" name="username" value="{{ old.username ?? '' }}" required>
@@ -32,7 +32,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-section">
                         <label for="email" class="form-label">Email</label>
                         <input type="email" class="form-control {% if errors.email is defined %}is-invalid{% endif %}" 
                                id="email" name="email" value="{{ old.email ?? '' }}" required>
@@ -45,7 +45,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-section">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control {% if errors.password is defined %}is-invalid{% endif %}" 
                                id="password" name="password" required>
@@ -85,7 +85,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-section">
                         <label for="confirm_password" class="form-label">Confirm Password</label>
                         <input type="password" class="form-control {% if errors.confirm_password is defined %}is-invalid{% endif %}" 
                                id="confirm_password" name="confirm_password" required>
@@ -168,21 +168,4 @@ document.addEventListener('DOMContentLoaded', function() {
     confirmPassword.addEventListener('input', validatePassword);
 });
 </script>
-
-<style>
-.password-requirements {
-    font-size: 0.9rem;
-    margin-top: 10px;
-}
-
-.requirement {
-    margin-bottom: 5px;
-    transition: color 0.3s ease;
-}
-
-.requirement i {
-    margin-right: 8px;
-    transition: color 0.3s ease;
-}
-</style>
 {% endblock %} 

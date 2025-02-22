@@ -24,14 +24,14 @@
                     {% endif %}
 
                     <form method="POST" action="/settings">
-                        <div class="mb-4">
+                        <div class="form-section">
                             <label for="discogs_username" class="form-label">Discogs Username</label>
                             <input type="text" class="form-control" id="discogs_username" name="discogs_username" 
                                    value="{{ settings.discogs_username ?? '' }}" required>
                             <div class="form-text">Your Discogs.com username</div>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="form-section">
                             <label for="discogs_token" class="form-label">Discogs Personal Access Token</label>
                             <input type="password" class="form-control" id="discogs_token" name="discogs_token" 
                                    value="{{ settings.discogs_token ?? '' }}" required>
