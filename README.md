@@ -4,6 +4,14 @@
 
 <h2>Features</h2>
 <ul>
+    <li>Modern Command Palette Interface:
+        <ul>
+            <li>Keyboard-first navigation (⌘K/Ctrl+K)</li>
+            <li>Quick access to all collection controls</li>
+            <li>Fuzzy search through commands</li>
+            <li>Beautiful backdrop blur effects</li>
+        </ul>
+    </li>
     <li>User Authentication:
         <ul>
             <li>Secure user registration and login</li>
@@ -25,7 +33,14 @@
             <li>Manual cache refresh via settings</li>
         </ul>
     </li>
-    <li>Browse your Discogs collection with a modern, responsive interface</li>
+    <li>Modern Collection Interface:
+        <ul>
+            <li>Responsive design for all devices</li>
+            <li>Smart pagination with ellipsis for large collections</li>
+            <li>Smooth animations and transitions</li>
+            <li>Dark theme optimized</li>
+        </ul>
+    </li>
     <li>View detailed release information including:
         <ul>
             <li>Cover art and additional release images</li>
@@ -34,13 +49,14 @@
             <li>Label and format information</li>
         </ul>
     </li>
-    <li>Sort your collection by:
+    <li>Powerful Collection Management:
         <ul>
-            <li>Date added</li>
-            <li>Artist name</li>
+            <li>Sort by date added or artist name</li>
+            <li>Filter by Discogs folders</li>
+            <li>Adjustable items per page (25/50/100)</li>
+            <li>Persistent view preferences</li>
         </ul>
     </li>
-    <li>Filter by Discogs folders</li>
     <li>SEO-friendly URLs</li>
 </ul>
 
@@ -51,7 +67,7 @@
     <li>Authentication: <code>/login</code>, <code>/register</code></li>
     <li>Settings: <code>/settings</code></li>
     <li>Collection view: <code>/folder/{folder-name}</code></li>
-    <li>Sorted view: <code>/folder/{folder-name}/sort/{field}/{direction}/page/{number}</code></li>
+    <li>Sorted view: <code>/folder/{folder-name}/sort/{field}/{direction}/page/{number}?per_page={count}</code></li>
     <li>Release view: <code>/release/{id}/{artist-name}/{release-title}</code></li>
 </ul>
 
@@ -115,6 +131,8 @@
 ├── config/             # Configuration files
 ├── database/           # SQLite database
 ├── public/             # Web root
+│   ├── css/           # Stylesheets
+│   ├── js/            # JavaScript files
 │   ├── img/           # Image storage
 │   └── index.php      # Application entry point
 ├── src/               # Application source code
