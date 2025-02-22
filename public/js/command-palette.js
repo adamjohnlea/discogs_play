@@ -187,29 +187,47 @@ class CommandPalette {
         const order = params.order || this.currentOrder;
         const perPage = params.per_page || this.currentPerPage;
         
-        // Reset to page 1 when changing sort or per_page
-        const page = (params.sort_by || params.order || params.per_page) ? 1 : this.currentPage;
+        // Reset to page 1 when changing folder, sort, or per_page
+        const page = (params.folder_id || params.sort_by || params.order || params.per_page) ? 1 : this.currentPage;
         
         // Get folder name for URL generation
-        let folderSlug = 'all';
-        if (folder !== '0') {
+        let folderSlug;
+        if (folder === '0') {
+            folderSlug = 'all';
+        } else if (folder === '1') {
+            folderSlug = 'uncategorized';
+        } else {
             const folderInfo = this.folderData[folder];
             if (folderInfo) {
                 // Convert folder name to URL-friendly slug
                 folderSlug = folderInfo.name.toLowerCase()
                     .replace(/[^\w\s-]/g, '') // Remove special characters
                     .replace(/\s+/g, '-')     // Replace spaces with hyphens
-                    .replace(/-+/g, '-');     // Remove consecutive hyphens
+                    .replace(/-+/g, '-')      // Remove consecutive hyphens
+                    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+            } else {
+                folderSlug = 'all'; // Default to 'all' if folder info not found
             }
         }
         
         // Build the URL in the format: /folder/{folder}/sort/{field}/{direction}/page/{page}
         let url = `/folder/${folderSlug}/sort/${sort}/${order}/page/${page}`;
         
-        // Add per_page as a query parameter
+        // Add per_page as a query parameter if not default
         if (perPage !== 25) {
             url += `?per_page=${perPage}`;
         }
+        
+        // Log the navigation for debugging
+        console.log('Navigating to:', {
+            folder,
+            folderSlug,
+            sort,
+            order,
+            page,
+            perPage,
+            url
+        });
         
         window.location.href = url;
     }
