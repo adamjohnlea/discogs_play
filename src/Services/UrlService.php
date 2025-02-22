@@ -65,8 +65,9 @@ class UrlService {
         
         $field = $currentParams['sort_by'] ?? 'added';
         $direction = $currentParams['order'] ?? 'desc';
+        $perPage = $currentParams['per_page'] ?? '25';
         
-        return "/folder/{$folder}/sort/{$field}/{$direction}/page/{$number}";
+        return "/folder/{$folder}/sort/{$field}/{$direction}/page/{$number}?per_page={$perPage}";
     }
 
     /**
