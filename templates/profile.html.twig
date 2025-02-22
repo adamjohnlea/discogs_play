@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentPasswordValid = currentValue.length > 0;
         
         updatePasswordBtn.disabled = !allRequirementsMet || !currentPasswordValid;
-        submitFeedback.style.display = (!allRequirementsMet || !currentPasswordValid) ? 'block' : 'none';
+        submitFeedback.classList.toggle('feedback-hidden', allRequirementsMet && currentPasswordValid);
     }
     
     function updateRequirement(id, valid) {
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
     passwordForm.addEventListener('submit', function(event) {
         if (updatePasswordBtn.disabled) {
             event.preventDefault();
-            submitFeedback.style.display = 'block';
+            submitFeedback.classList.remove('feedback-hidden');
         }
     });
     
