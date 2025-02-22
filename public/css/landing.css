@@ -1,0 +1,57 @@
+.landing-hero {
+    margin: 3rem 0;
+}
+
+.landing-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.landing-hero .lead {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
+
+.feature-card {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.feature-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-right: 1rem;
+}
+
+.feature-content h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.feature-content p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+}
+
+.preview-card {
+    background: var(--dark);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    text-align: center;
+}
+
+.preview-card i {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.preview-card h3 {
+    color: var(--light);
+    font-size: 1.5rem;
+    margin-bottom: 0;
+} 
