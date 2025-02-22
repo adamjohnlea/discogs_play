@@ -29,6 +29,10 @@ return function($router) {
     // Collection view with clean URLs for folder, sorting, and pagination
     $router->add('/folder/:folder/sort/:field/:direction/page/:page', ['ReleaseController', 'showCollection']);
     
+    // Collection search routes (new)
+    $router->add('/folder/:folder/search/:query/page/:page', ['ReleaseController', 'searchCollection']);
+    $router->add('/folder/:folder/search/:query', ['ReleaseController', 'searchCollection']);
+    
     // Simpler variations of collection view
     $router->add('/folder/:folder/page/:page', ['ReleaseController', 'showCollection']);
     $router->add('/folder/:folder/sort/:field/:direction', ['ReleaseController', 'showCollection']);

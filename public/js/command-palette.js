@@ -162,6 +162,12 @@ class CommandPalette {
             cmd.label.toLowerCase().includes(query)
         );
 
+        // If query is at least 2 characters and no commands match, switch to search mode
+        if (query.length >= 2 && filtered.length === 0) {
+            this.showSearchResults(query);
+            return;
+        }
+
         this.results.innerHTML = filtered.map(cmd => `
             <button class="command-palette-item" data-id="${cmd.id}">
                 <span class="command-palette-item-icon">${cmd.icon}</span>
@@ -177,6 +183,50 @@ class CommandPalette {
                     this.close();
                 }
             });
+        });
+    }
+
+    showSearchResults(query) {
+        // Get current folder from data attribute
+        const folder = this.currentFolder === '0' ? 'all' : 
+            this.folderData[this.currentFolder]?.name.toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-+|-+$/g, '') || 'all';
+
+        // Build the search URL
+        const url = `/folder/${folder}/search/${encodeURIComponent(query)}/page/1`;
+        
+        // Show searching indicator
+        this.results.innerHTML = `
+            <div class="command-palette-item">
+                <span class="command-palette-item-icon">🔍</span>
+                <span class="command-palette-item-label">
+                    Press Enter to search for "${query}"
+                </span>
+            </div>
+        `;
+
+        // Handle Enter key to execute search
+        const handleKeydown = (e) => {
+            if (e.key === 'Enter') {
+                window.location.href = url;
+                this.close();
+                // Remove the event listener
+                this.input.removeEventListener('keydown', handleKeydown);
+            }
+        };
+
+        // Add Enter key handler
+        this.input.addEventListener('keydown', handleKeydown);
+
+        // Handle click on search suggestion
+        this.results.querySelector('.command-palette-item').addEventListener('click', () => {
+            window.location.href = url;
+            this.close();
+            // Remove the event listener
+            this.input.removeEventListener('keydown', handleKeydown);
         });
     }
 
