@@ -113,59 +113,15 @@
 {% endblock %}
 
 {% block javascripts %}
+<script src="/js/password-validation.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const password = document.getElementById('password');
-    const confirmPassword = document.getElementById('confirm_password');
-    const registerButton = document.getElementById('registerButton');
-    
-    function validatePassword() {
-        const value = password.value;
-        const confirmValue = confirmPassword.value;
-        
-        // Length check
-        updateRequirement('length-check', value.length >= 8);
-        
-        // Uppercase check
-        updateRequirement('uppercase-check', /[A-Z]/.test(value));
-        
-        // Lowercase check
-        updateRequirement('lowercase-check', /[a-z]/.test(value));
-        
-        // Number check
-        updateRequirement('number-check', /[0-9]/.test(value));
-        
-        // Symbol check
-        updateRequirement('symbol-check', /[!@#$%^&*(),.?":{}|<>]/.test(value));
-        
-        // Match check
-        updateRequirement('match-check', value === confirmValue && value !== '');
-
-        // Enable/disable register button based on all requirements being met
-        const allRequirementsMet = document.querySelectorAll('.requirement i.text-success').length === 6;
-        registerButton.disabled = !allRequirementsMet;
-    }
-    
-    function updateRequirement(id, valid) {
-        const element = document.getElementById(id);
-        const icon = element.querySelector('i');
-        
-        if (valid) {
-            icon.classList.remove('fa-circle-xmark', 'text-danger');
-            icon.classList.add('fa-circle-check', 'text-success');
-            element.classList.remove('text-danger');
-            element.classList.add('text-success');
-        } else {
-            icon.classList.remove('fa-circle-check', 'text-success');
-            icon.classList.add('fa-circle-xmark', 'text-danger');
-            element.classList.remove('text-success');
-            element.classList.add('text-danger');
-        }
-    }
-    
-    // Add event listeners for real-time validation
-    password.addEventListener('input', validatePassword);
-    confirmPassword.addEventListener('input', validatePassword);
+    // Initialize password validation
+    new PasswordValidator({
+        passwordInput: document.getElementById('password'),
+        confirmInput: document.getElementById('confirm_password'),
+        submitButton: document.getElementById('registerButton')
+    });
 });
 </script>
 {% endblock %} 

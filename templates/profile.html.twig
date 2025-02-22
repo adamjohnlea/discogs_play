@@ -206,16 +206,11 @@
 
 {% block javascripts %}
 {{ parent() }}
+<script src="/js/password-validation.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const confirmInput = document.getElementById('confirm_deletion');
     const confirmBtn = document.getElementById('confirmDeleteBtn');
-    const passwordForm = document.getElementById('passwordForm');
-    const currentPassword = document.getElementById('current_password');
-    const newPassword = document.getElementById('new_password');
-    const confirmPassword = document.getElementById('confirm_password');
-    const updatePasswordBtn = document.getElementById('updatePasswordBtn');
-    const submitFeedback = document.getElementById('submitFeedback');
     
     // Account deletion confirmation
     if (confirmInput && confirmBtn) {
@@ -224,61 +219,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function validatePassword() {
-        const value = newPassword.value;
-        const confirmValue = confirmPassword.value;
-        const currentValue = currentPassword.value;
-        
-        // Length check
-        updateRequirement('length-check', value.length >= 8);
-        
-        // Uppercase check
-        updateRequirement('uppercase-check', /[A-Z]/.test(value));
-        
-        // Lowercase check
-        updateRequirement('lowercase-check', /[a-z]/.test(value));
-        
-        // Number check
-        updateRequirement('number-check', /[0-9]/.test(value));
-        
-        // Symbol check
-        updateRequirement('symbol-check', /[!@#$%^&*(),.?":{}|<>]/.test(value));
-        
-        // Match check
-        updateRequirement('match-check', value === confirmValue && value !== '');
-        
-        // Enable/disable update button based on all requirements being met
-        const allRequirementsMet = document.querySelectorAll('.requirement i.text-success').length === 6;
-        const currentPasswordValid = currentValue.length > 0;
-        
-        updatePasswordBtn.disabled = !allRequirementsMet || !currentPasswordValid;
-        submitFeedback.classList.toggle('feedback-hidden', allRequirementsMet && currentPasswordValid);
-    }
-    
-    function updateRequirement(id, valid) {
-        const element = document.getElementById(id);
-        const icon = element.querySelector('i');
-        
-        if (valid) {
-            icon.classList.remove('fa-circle-xmark', 'text-danger');
-            icon.classList.add('fa-circle-check', 'text-success');
-            element.classList.remove('text-danger');
-            element.classList.add('text-success');
-        } else {
-            icon.classList.remove('fa-circle-check', 'text-success');
-            icon.classList.add('fa-circle-xmark', 'text-danger');
-            element.classList.remove('text-success');
-            element.classList.add('text-danger');
-        }
-    }
-    
-    // Add event listeners for real-time validation
-    currentPassword.addEventListener('input', validatePassword);
-    newPassword.addEventListener('input', validatePassword);
-    confirmPassword.addEventListener('input', validatePassword);
+    // Initialize password validation
+    new PasswordValidator({
+        passwordInput: document.getElementById('new_password'),
+        confirmInput: document.getElementById('confirm_password'),
+        currentInput: document.getElementById('current_password'),
+        submitButton: document.getElementById('updatePasswordBtn'),
+        feedbackElement: document.getElementById('submitFeedback'),
+        requireCurrentPassword: true
+    });
     
     // Form submission handling
+    const passwordForm = document.getElementById('passwordForm');
     passwordForm.addEventListener('submit', function(event) {
+        const updatePasswordBtn = document.getElementById('updatePasswordBtn');
+        const submitFeedback = document.getElementById('submitFeedback');
+        
         if (updatePasswordBtn.disabled) {
             event.preventDefault();
             submitFeedback.classList.remove('feedback-hidden');
@@ -287,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // If there's a profile error, highlight the current password field
     {% if profile_error is defined and profile_error == 'Current password is incorrect' %}
-        currentPassword.classList.add('is-invalid');
+        document.getElementById('current_password').classList.add('is-invalid');
     {% endif %}
 });
 </script>
