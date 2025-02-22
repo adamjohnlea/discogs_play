@@ -1,21 +1,41 @@
 <!-- Collection Controls -->
 <div class="collection-controls d-flex justify-content-center p-3">
     {% if release_id is not defined or not release_id %}
-        <div class="btn-group btn-group-sm mr-2 p-1" role="group" aria-label="Pagination">
-            <a class="btn btn-primary text-uppercase {{ page == 1 ? 'disabled' : '' }}" 
-               href="{{ page_url(page - 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order}) }}" 
-               tabindex="-1">&#12298;</a>
+        <div class="modern-pagination" role="navigation" aria-label="Pagination">
+            <a class="page-btn page-nav {{ page == 1 ? 'disabled' : '' }}" 
+               href="{{ page_url(page - 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order, 'per_page': per_page}) }}" 
+               {% if page == 1 %}aria-disabled="true"{% endif %}
+               aria-label="Previous page">
+               &#12298;
+            </a>
             
             {% if collection is defined %}
-                {% for x in 1..collection.pagination.pages %}
-                    <a class="btn btn-primary text-uppercase {{ page == x ? 'active disabled' : '' }}"
-                       href="{{ page_url(x, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order}) }}">{{ x }}</a>
+                {% set total_pages = collection.pagination.pages %}
+                {% for x in 1..total_pages %}
+                    {% if 
+                        x == 1 or 
+                        x == total_pages or 
+                        x == page or 
+                        (x >= page - 1 and x <= page + 1)
+                    %}
+                        <a class="page-btn {{ page == x ? 'active' : '' }} {{ page == x ? 'disabled' : '' }}"
+                           href="{{ page_url(x, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order, 'per_page': per_page}) }}"
+                           {% if page == x %}aria-current="page"{% endif %}
+                           aria-label="Page {{ x }}">
+                            {{ x }}
+                        </a>
+                    {% elseif (x == page - 2 or x == page + 2) %}
+                        <span class="page-btn disabled" aria-hidden="true">...</span>
+                    {% endif %}
                 {% endfor %}
             {% endif %}
 
-            <a class="btn btn-primary text-uppercase {{ page == collection.pagination.pages ? 'disabled' : '' }}"
-               href="{{ page_url(page + 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order}) }}"
-               tabindex="-1">&#12299;</a>
+            <a class="page-btn page-nav {{ page == collection.pagination.pages ? 'disabled' : '' }}"
+               href="{{ page_url(page + 1, {'folder_id': folder_id, 'sort_by': sort_by, 'order': order, 'per_page': per_page}) }}"
+               {% if page == collection.pagination.pages %}aria-disabled="true"{% endif %}
+               aria-label="Next page">
+               &#12299;
+            </a>
         </div>
         
         <!-- Command palette will be inserted here by JavaScript -->
