@@ -7,6 +7,15 @@ class CommandPalette {
         this.currentOrder = document.querySelector('[data-current-order]')?.dataset.currentOrder || 'desc';
         this.currentPerPage = parseInt(document.querySelector('[data-per-page]')?.dataset.perPage || '25');
         
+        // Store folder data for URL generation
+        this.folderData = {};
+        document.querySelectorAll('[data-folder-id]').forEach(folder => {
+            this.folderData[folder.dataset.folderId] = {
+                name: folder.dataset.folderName,
+                count: folder.dataset.folderCount
+            };
+        });
+        
         this.setupCommands();
         this.createPalette();
         this.bindEvents();
@@ -181,11 +190,24 @@ class CommandPalette {
         // Reset to page 1 when changing sort or per_page
         const page = (params.sort_by || params.order || params.per_page) ? 1 : this.currentPage;
         
+        // Get folder name for URL generation
+        let folderSlug = 'all';
+        if (folder !== '0') {
+            const folderInfo = this.folderData[folder];
+            if (folderInfo) {
+                // Convert folder name to URL-friendly slug
+                folderSlug = folderInfo.name.toLowerCase()
+                    .replace(/[^\w\s-]/g, '') // Remove special characters
+                    .replace(/\s+/g, '-')     // Replace spaces with hyphens
+                    .replace(/-+/g, '-');     // Remove consecutive hyphens
+            }
+        }
+        
         // Build the URL in the format: /folder/{folder}/sort/{field}/{direction}/page/{page}
-        let url = `/folder/${folder === '0' ? 'all' : folder}/sort/${sort}/${order}/page/${page}`;
+        let url = `/folder/${folderSlug}/sort/${sort}/${order}/page/${page}`;
         
         // Add per_page as a query parameter
-        if (perPage !== '25') {
+        if (perPage !== 25) {
             url += `?per_page=${perPage}`;
         }
         
