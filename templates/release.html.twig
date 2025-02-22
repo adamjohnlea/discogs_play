@@ -34,11 +34,11 @@
 
                 <div class="card-body">
                     <div class="p-1 table-responsive">
-                        <table class="table table-striped">
+                        <table class="table release-table">
                             <tbody>
                                 <tr>
-                                    <th scope="row" style="width:1%"><i class="fa-fw fa-solid fa-quote-right"></i></th>
-                                    <td style="width:1%">Title</td>
+                                    <th scope="row" class="icon-cell"><i class="fa-fw fa-solid fa-quote-right"></i></th>
+                                    <td class="label-cell">Title</td>
                                     <td>{{ releaseInfo.title|default('Unknown Title') }}</td>
                                 </tr>
                                 {% if releaseInfo.artists is defined and releaseInfo.artists %}
@@ -161,28 +161,23 @@
                         </h2>
                         <div id="collapseTracklist" class="accordion-collapse collapse show">
                             <div class="accordion-body">
-                                <table class="table table-striped">
-                                    <tr>
-                                        <th data-align="left" style="width:1%">#</th>
-                                        <td>Track Name</td>
-                                        <td style="width:1%">m:s</td>
-                                    </tr>
-                                    {% for track in releaseInfo.tracklist %}
+                                <table class="table release-table">
+                                    <thead>
                                         <tr>
-                                            <th data-align="left" style="width:1%">{{ track.position|default('?') }}:  </th>
-                                            <td data-align="left">
-                                                {{ track.title|default('Unknown Track') }}
-                                                {% if track.extraartists is defined and track.extraartists %}
-                                                    <br>
-                                                    {% for artist in track.extraartists %}
-                                                        {{ artist.role|default('') }} <strong>{{ artist.name|clean_artist_name }}</strong>
-                                                        {%- if not loop.last %}, {% endif %}
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </td>
-                                            <td data-align="left" style="width:1%">{{ track.duration|default('-:--') }}</td>
+                                            <th data-align="left" class="position-cell">#</th>
+                                            <th data-align="left">Track</th>
+                                            <td class="duration-cell">m:s</td>
                                         </tr>
-                                    {% endfor %}
+                                    </thead>
+                                    <tbody>
+                                        {% for track in releaseInfo.tracklist %}
+                                            <tr>
+                                                <th data-align="left" class="position-cell">{{ track.position|default('?') }}:  </th>
+                                                <td data-align="left">{{ track.title|default('Unknown Track') }}</td>
+                                                <td data-align="left" class="duration-cell">{{ track.duration|default('-:--') }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>

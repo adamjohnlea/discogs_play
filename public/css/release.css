@@ -1,0 +1,21 @@
+.release-table {
+    width: 100%;
+}
+
+.release-table th[data-align="left"],
+.release-table td[data-align="left"] {
+    text-align: left;
+}
+
+.release-table .icon-cell,
+.release-table .label-cell,
+.release-table .position-cell,
+.release-table .duration-cell {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.release-table .fa-fw {
+    width: 1.25em;
+    text-align: center;
+} 
