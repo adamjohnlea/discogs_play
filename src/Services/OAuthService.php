@@ -146,13 +146,11 @@ class OAuthService {
             $response = @file_get_contents($identityUrl, false, $context);
             
             if ($response === false) {
-                error_log('Failed to get Discogs identity response');
                 throw new Exception('Failed to get Discogs identity');
             }
             
             $identity = json_decode($response, true);
             if (!$identity || !isset($identity['username'])) {
-                error_log('Invalid Discogs identity response: ' . $response);
                 throw new Exception('Invalid response from Discogs identity endpoint');
             }
             
@@ -189,13 +187,11 @@ class OAuthService {
             ]);
             
             if (!$success) {
-                error_log('Failed to save OAuth credentials: ' . json_encode($stmt->errorInfo()));
                 throw new Exception('Failed to save OAuth credentials');
             }
             
             return true;
         } catch (Exception $e) {
-            error_log('Exception in saveOAuthCredentials: ' . $e->getMessage());
             throw $e;
         }
     }
