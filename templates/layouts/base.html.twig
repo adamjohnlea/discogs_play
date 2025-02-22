@@ -18,11 +18,11 @@
     <link href="/css/command-palette.css" rel="stylesheet">
     <!-- Modern Pagination -->
     <link href="/css/modern-pagination.css" rel="stylesheet">
+    <!-- Theme -->
+    <link href="/css/theme.css" rel="stylesheet">
     
     <style>
-        body {
-            background-color: #212529;
-        }
+        /* Theme styles moved to theme.css */
         .card {
             background-color: #2b3035;
             border: 1px solid rgba(255,255,255,.125);
@@ -40,9 +40,6 @@
         }
         .table-striped > tbody > tr:nth-of-type(odd) {
             background-color: rgba(0,0,0,.05);
-        }
-        .banner {
-            background: linear-gradient(to right, #343a40, #212529);
         }
         .list-group-item {
             background-color: #2b3035;
@@ -65,20 +62,6 @@
             object-fit: contain;
             aspect-ratio: 1/1;
             padding: 1rem;
-        }
-        .dropdown-menu {
-            background-color: #2b3035;
-            border-color: rgba(255,255,255,.125);
-        }
-        .dropdown-item {
-            color: #dee2e6;
-        }
-        .dropdown-item:hover {
-            background-color: #343a40;
-            color: #fff;
-        }
-        .dropdown-divider {
-            border-color: rgba(255,255,255,.125);
         }
     </style>
     {% block stylesheets %}{% endblock %}

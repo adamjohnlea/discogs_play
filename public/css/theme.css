@@ -1,0 +1,36 @@
+/* Base theme colors and general dark mode styles */
+body {
+    background-color: #212529;
+}
+
+/* Dark theme color variables - can be extended later for light theme */
+:root[data-bs-theme="dark"] {
+    --app-bg: #212529;
+    --component-bg: #2b3035;
+    --border-color: rgba(255,255,255,.125);
+    --footer-bg: #343a40;
+}
+
+/* Dropdown theming */
+.dropdown-menu {
+    background-color: var(--component-bg);
+    border-color: var(--border-color);
+}
+
+.dropdown-item {
+    color: var(--bs-body-color);
+}
+
+.dropdown-item:hover {
+    background-color: var(--footer-bg);
+    color: #fff;
+}
+
+.dropdown-divider {
+    border-color: var(--border-color);
+}
+
+/* Banner gradient */
+.banner {
+    background: linear-gradient(to right, var(--footer-bg), var(--app-bg));
+} 
