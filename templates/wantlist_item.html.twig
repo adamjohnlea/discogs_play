@@ -1,0 +1,212 @@
+{% extends "layouts/base.html.twig" %}
+
+{% block title %}{{ app_name }}{% if wantlistInfo is defined and wantlistInfo %} - {{ wantlistInfo.title }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    {# Left Column - Basic Info #}
+    <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+        <div class="bg-white rounded shadow-sm">
+            <div class="card h-100">
+                {% if wantlistInfo.images is defined and wantlistInfo.images|length > 0 %}
+                    <div id="carouselExampleControls" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner">
+                            {% for image in wantlistInfo.images %}
+                                <div class="carousel-item {{ loop.first ? 'active' }}">
+                                    <img class="d-block w-100" 
+                                         src="{{ wantlist_image(image.resource_url, wantlistInfo.id, loop.index0) }}" 
+                                         alt="{{ image.type|default('Wantlist Item Image') }}">
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                {% endif %}
+
+                <div class="card-body">
+                    <div class="p-1 table-responsive">
+                        <table class="table release-table">
+                            <tbody>
+                                <tr>
+                                    <th scope="row" class="icon-cell"><i class="fa-fw fa-solid fa-quote-right"></i></th>
+                                    <td class="label-cell">Title</td>
+                                    <td>{{ wantlistInfo.title|default('Unknown Title') }}</td>
+                                </tr>
+                                {% if wantlistInfo.artists is defined and wantlistInfo.artists %}
+                                    <tr>
+                                        <th scope="row"><i class="fa-fw fa-solid fa-people-group"></i></th>
+                                        <td>Artist</td>
+                                        <td>{{ wantlistInfo.artists|map(a => a.name|clean_artist_name)|join(', ') }}</td>
+                                    </tr>
+                                {% endif %}
+                                <tr>
+                                    <th scope="row"><i class="fa-fw fa-solid fa-calendar-days"></i></th>
+                                    <td>Released</td>
+                                    <td>{{ wantlistInfo.released|default('?') }}</td>
+                                </tr>
+                                {% if wantlistInfo.series is defined and wantlistInfo.series %}
+                                    <tr>
+                                        <th scope="row"><i class="fa-fw fa-solid fa-calendar-days"></i></th>
+                                        <td>Series</td>
+                                        <td>{{ wantlistInfo.series[0].name|default('Unknown Series') }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if wantlistInfo.labels is defined and wantlistInfo.labels %}
+                                    <tr>
+                                        <th scope="row"><i class="fa-fw fa-solid fa-building"></i></th>
+                                        <td>Label</td>
+                                        <td>
+                                            {% for label in wantlistInfo.labels %}
+                                                {{ label.name|default('Unknown Label') }}{% if label.catno %}, {{ label.catno }}{% endif %}
+                                                {% if not loop.last %}<br>{% endif %}
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                                {% if wantlistInfo.formats is defined and wantlistInfo.formats %}
+                                    <tr>
+                                        <th scope="row"><i class="fa-fw fa-solid fa-compact-disc"></i></th>
+                                        <td>Format</td>
+                                        <td>
+                                            {% for format in wantlistInfo.formats %}
+                                                {% if format.qty|default(1) > 1 %}{{ format.qty }} x {% endif %}
+                                                <b>{{ format.name|default('Unknown Format') }}</b>
+                                                {% if format.descriptions %}, {{ format.descriptions|join(', ') }}{% endif %}
+                                                {% if format.text %}, <i>{{ format.text }}</i>{% endif %}
+                                                <br>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                                {% if wantlistInfo.genres is defined and wantlistInfo.genres %}
+                                    <tr>
+                                        <th scope="row"><i class="fa-fw fa-solid fa-bars-staggered"></i></th>
+                                        <td>Genres</td>
+                                        <td>{{ wantlistInfo.genres|join(', ') }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if wantlistInfo.styles is defined and wantlistInfo.styles %}
+                                    <tr>
+                                        <th scope="row"><i class="fa-fw fa-solid fa-bars-staggered"></i></th>
+                                        <td>Styles</td>
+                                        <td>{{ wantlistInfo.styles|join(', ') }}</td>
+                                    </tr>
+                                {% endif %}
+
+                                {% if myWantlistInfo is defined and myWantlistInfo %}
+                                    {% if myWantlistInfo.notes %}
+                                        <tr>
+                                            <th><i class="fa-fw fa-solid fa-note-sticky"></i></th>
+                                            <td>Notes</td>
+                                            <td>{{ myWantlistInfo.notes }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if myWantlistInfo.rating > 0 %}
+                                        <tr>
+                                            <th><i class="fa-fw fa-solid fa-star"></i></th>
+                                            <td>Priority</td>
+                                            <td>{{ myWantlistInfo.rating }}</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <a class="btn btn-secondary btn-sm" href="https://www.discogs.com/release/{{ wantlistInfo.id }}">Discogs <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    <a class="btn btn-secondary btn-sm" href="{{ wantlistInfo.resource_url }}">JSON <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Right Column - Detailed Info #}
+    <div class="col-xl-8 col-lg-6 col-md-6 mb-4">
+        <div class="bg-white rounded shadow-sm">
+            <div class="accordion" id="accordionExample">
+                {% if wantlistInfo.notes is defined and wantlistInfo.notes %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotes" aria-expanded="true">
+                                Notes
+                            </button>
+                        </h2>
+                        <div id="collapseNotes" class="accordion-collapse collapse show">
+                            <div class="accordion-body">
+                                <table class="table table-striped">
+                                    <tr><td>{{ wantlistInfo.notes|clean_notes|raw }}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if wantlistInfo.tracklist is defined and wantlistInfo.tracklist %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTracklist" aria-expanded="true">
+                                TrackList
+                            </button>
+                        </h2>
+                        <div id="collapseTracklist" class="accordion-collapse collapse show">
+                            <div class="accordion-body">
+                                <table class="table release-table">
+                                    <thead>
+                                        <tr>
+                                            <th data-align="left" class="position-cell">#</th>
+                                            <th data-align="left">Track</th>
+                                            <td class="duration-cell">m:s</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for track in wantlistInfo.tracklist %}
+                                            <tr>
+                                                <th data-align="left" class="position-cell">{{ track.position|default('?') }}:  </th>
+                                                <td data-align="left">{{ track.title|default('Unknown Track') }}</td>
+                                                <td data-align="left" class="duration-cell">{{ track.duration|default('-:--') }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if wantlistInfo.companies is defined and wantlistInfo.companies %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCompanies">
+                                Companies
+                            </button>
+                        </h2>
+                        <div id="collapseCompanies" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <ul class="list-group list-group-flush">
+                                    {% for company in wantlistInfo.companies %}
+                                        <li class="list-group-item">
+                                            <strong>{{ company.entity_type_name|default('Unknown Type') }}</strong> 
+                                            {{ company.name|default('Unknown Company') }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
