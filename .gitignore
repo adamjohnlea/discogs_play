@@ -39,8 +39,10 @@ Thumbs.db
 !/public/img/covers/.gitkeep
 /public/img/releases/*
 !/public/img/releases/.gitkeep
-/public/img/wantlist/*
-!/public/img/wantlist/.gitkeep
+/public/img/wantlist/covers/*
+!/public/img/wantlist/covers/.gitkeep
+/public/img/wantlist/releases/*
+!/public/img/wantlist/releases/.gitkeep
 
 # PHP specific
 *.phar
