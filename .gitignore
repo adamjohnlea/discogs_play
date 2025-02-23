@@ -1,22 +1,56 @@
-# Environment files
+# Environment and configuration
 .env
 .env.local
 .env.*.local
-
-# Configuration
 config/config.php
 
-# Cursor IDE files
-.cursor/
+# Dependencies
+/vendor/
+/node_modules/
+composer.lock
+package-lock.json
 
-# Existing entries...
-vendor/
+# IDE and editor files
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS generated files
 .DS_Store
-*.log
-cache/*
-!cache/.gitkeep
-public/img/covers/*
-!public/img/covers/.gitkeep
-public/img/releases/*
-!public/img/releases/.gitkeep
-database/*.sqlitepublic/img/wantlist/
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and databases
+/logs/*.log
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Cache and generated files
+/cache/*
+!/cache/.gitkeep
+/public/img/covers/*
+!/public/img/covers/.gitkeep
+/public/img/releases/*
+!/public/img/releases/.gitkeep
+/public/img/wantlist/*
+!/public/img/wantlist/.gitkeep
+
+# PHP specific
+*.phar
+*.phpunit.result.cache
+
+# Twig cache
+/cache/twig/*
+!/cache/twig/.gitkeep
+
+# Backup files
+*.bak
+*.backup
+*.old
