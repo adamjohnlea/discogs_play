@@ -48,15 +48,46 @@ class CollectionController {
             $count = $stmt->fetchColumn();
 
             if ($count === 0) {
-                // Get cached collection data
-                $cacheKey = "collection_{$_SESSION['user_id']}_0_added_desc_1_999999";
-                $collection = $this->cacheService->getCachedCollection($cacheKey);
+                // Use the full collection cache key for search
+                $fullCacheKey = "collection_{$_SESSION['user_id']}_0_added_desc_1_999999";
+                $collection = $this->cacheService->getCachedCollection($fullCacheKey);
+                
+                if (!$collection || !isset($collection['releases'])) {
+                    // If full collection is not cached, fetch it from Discogs
+                    $url = $this->discogsService->buildUrl(
+                        "/users/:username/collection/folders/0/releases",
+                        $_SESSION['user_id']
+                    );
+                    $url .= "?sort=added&sort_order=desc&page=1&per_page=999999";
+                    
+                    $context = $this->discogsService->getApiContext($_SESSION['user_id']);
+                    $response = @file_get_contents($url, false, $context);
+                    
+                    if ($response === false) {
+                        $this->logger->error("Failed to fetch full collection from Discogs");
+                        return;
+                    }
+                    
+                    $collection = json_decode($response, true);
+                    if (!$collection || !isset($collection['releases'])) {
+                        $this->logger->error("Invalid collection data from Discogs");
+                        return;
+                    }
+                    
+                    // Add user_id to collection data
+                    $collection['user_id'] = $_SESSION['user_id'];
+                    
+                    // Cache the full collection
+                    $this->cacheService->cacheCollection($fullCacheKey, $collection);
+                }
                 
                 if ($collection && isset($collection['releases'])) {
                     $this->updateSearchIndex($_SESSION['user_id'], $collection['releases']);
                     $this->logger->info("Search index initialized", [
                         'releases_indexed' => count($collection['releases'])
                     ]);
+                } else {
+                    $this->logger->error("Failed to get collection data");
                 }
             }
         } catch (Exception $e) {
