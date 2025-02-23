@@ -19,4 +19,4 @@ public/img/covers/*
 !public/img/covers/.gitkeep
 public/img/releases/*
 !public/img/releases/.gitkeep
-database/*.sqlite
+database/*.sqlitepublic/img/wantlist/
