@@ -4,6 +4,8 @@ class TwigConfig {
     private static $instance = null;
     private $twig;
     private $imageService;
+    private $wantlistImageService;
+    private $urlService;
 
     private function __construct($config) {
         $loader = new \Twig\Loader\FilesystemLoader($config['paths']['templates']);
@@ -16,9 +18,11 @@ class TwigConfig {
 
         // Initialize Services
         require_once __DIR__ . '/Services/ImageService.php';
+        require_once __DIR__ . '/Services/WantlistImageService.php';
         require_once __DIR__ . '/Services/UrlService.php';
         $this->imageService = new ImageService($config);
-        $urlService = new UrlService($config);
+        $this->wantlistImageService = new WantlistImageService($config);
+        $this->urlService = new UrlService($config);
 
         // Add any global variables here
         $this->twig->addGlobal('app_name', $config['app']['name']);
@@ -28,6 +32,7 @@ class TwigConfig {
             return '/img/' . $path;
         }));
 
+        // Release image functions
         $this->twig->addFunction(new \Twig\TwigFunction('cover_image', function ($url, $releaseId) {
             return $this->imageService->getCoverImage($url, $releaseId);
         }));
@@ -36,22 +41,19 @@ class TwigConfig {
             return $this->imageService->getReleaseImage($url, $releaseId, $index);
         }));
 
-        // Add URL generation functions
-        $this->twig->addFunction(new \Twig\TwigFunction('release_url', function ($id, $releaseInfo = null) use ($urlService) {
-            return $urlService->release($id, $releaseInfo);
+        // Wantlist image functions
+        $this->twig->addFunction(new \Twig\TwigFunction('wantlist_cover_image', function ($url, $wantlistItemId) {
+            return $this->wantlistImageService->getWantlistCoverImage($url, $wantlistItemId);
         }));
 
-        $this->twig->addFunction(new \Twig\TwigFunction('folder_url', function ($id, $name = null) use ($urlService) {
-            return $urlService->folder($id, $name);
+        $this->twig->addFunction(new \Twig\TwigFunction('wantlist_image', function ($url, $wantlistItemId, $index = 0) {
+            return $this->wantlistImageService->getWantlistImage($url, $wantlistItemId, $index);
         }));
 
-        $this->twig->addFunction(new \Twig\TwigFunction('sort_url', function ($field, $direction, $currentParams = []) use ($urlService) {
-            return $urlService->sort($field, $direction, $currentParams);
-        }));
-
-        $this->twig->addFunction(new \Twig\TwigFunction('page_url', function ($number, $currentParams = []) use ($urlService) {
-            return $urlService->page($number, $currentParams);
-        }));
+        // URL helper functions
+        $this->twig->addFunction(new \Twig\TwigFunction('release_url', (function ($id, $releaseInfo = null) {
+            return $this->urlService->release($id, $releaseInfo);
+        })->bindTo($this)));
 
         // Add filters
         $this->twig->addFilter(new \Twig\TwigFilter('nl2br', function($text) {
@@ -116,14 +118,15 @@ class TwigConfig {
         $this->twig->addExtension(new AuthExtension($config));
     }
 
-    public static function getInstance($config = null) {
+    public static function getInstance($config) {
         if (self::$instance === null) {
-            if ($config === null) {
-                throw new \RuntimeException('Config must be provided for first instantiation');
-            }
             self::$instance = new self($config);
         }
         return self::$instance;
+    }
+
+    public function getTwig() {
+        return $this->twig;
     }
 
     public function render($template, $data = []) {

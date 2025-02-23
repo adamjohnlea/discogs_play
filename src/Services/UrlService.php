@@ -25,6 +25,35 @@ class UrlService {
     }
 
     /**
+     * Generate a URL for a folder
+     */
+    public function folder($id, $name = null) {
+        if (!$name) {
+            return "/collection?folder={$id}";
+        }
+        return "/collection?folder=" . urlencode($name);
+    }
+
+    /**
+     * Generate a URL for sorting
+     */
+    public function sort($field, $direction, $currentParams = []) {
+        $params = array_merge($currentParams, [
+            'sort_by' => $field,
+            'order' => $direction
+        ]);
+        return '?' . http_build_query($params);
+    }
+
+    /**
+     * Generate a URL for pagination
+     */
+    public function page($number, $currentParams = []) {
+        $params = array_merge($currentParams, ['page' => $number]);
+        return '?' . http_build_query($params);
+    }
+
+    /**
      * Convert text to a URL-friendly slug
      */
     public function slugify($text) {
