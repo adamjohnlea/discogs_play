@@ -126,6 +126,9 @@ class Router {
                     case 'SettingsController':
                         require_once __DIR__ . '/Controllers/SettingsController.php';
                         break;
+                    case 'WantlistController':
+                        require_once __DIR__ . '/Controllers/WantlistController.php';
+                        break;
                 }
                 
                 $controller = new $controller($this->twig, $this->config);

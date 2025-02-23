@@ -29,6 +29,7 @@ require_once __DIR__ . '/Controllers/HomeController.php';
 require_once __DIR__ . '/Controllers/SettingsController.php';
 require_once __DIR__ . '/Controllers/ProfileController.php';
 require_once __DIR__ . '/Controllers/OAuthController.php';
+require_once __DIR__ . '/Controllers/WantlistController.php';
 
 // Include utility functions
 require_once __DIR__ . '/Utils/utils.php';

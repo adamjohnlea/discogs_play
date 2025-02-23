@@ -32,6 +32,10 @@ return function($router) {
     // Release routes
     $router->add('/release/:id/:artist/:title', ['ReleaseController', 'show']);
     
+    // Wantlist routes
+    $router->add('/wantlist', ['WantlistController', 'index']);
+    $router->add('/wantlist/:id/:artist/:title', ['WantlistController', 'show']);
+    
     // Root path
     $router->add('/', ['HomeController', 'index']);
 }; 
