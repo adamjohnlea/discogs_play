@@ -1,16 +1,72 @@
 /* Card component styling */
 .card {
-    background-color: var(--component-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(33, 37, 41, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(33, 37, 41, 0.9);
 }
 
 .card-body {
-    background-color: var(--component-bg);
+    padding: 1rem;
+}
+
+.card-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-title a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.card-title a:hover {
+    color: #fff;
+}
+
+.card-title .fa-quote-right {
+    opacity: 0.5;
+    font-size: 0.9rem;
 }
 
 .card-footer {
-    background-color: var(--footer-bg);
-    border-top: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1rem;
+}
+
+.card-footer small {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.card .badge {
+    font-weight: normal;
+    padding: 0.4em 0.8em;
+    background: rgba(25, 135, 84, 0.2);
+    border: 1px solid rgba(25, 135, 84, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.card .badge.rounded-pill {
+    border-radius: 4px !important;
+}
+
+.card img {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: opacity 0.2s ease;
+}
+
+.card:hover img {
+    opacity: 0.95;
 }
 
 /* Card images */
