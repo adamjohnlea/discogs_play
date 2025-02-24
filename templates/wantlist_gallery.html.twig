@@ -18,7 +18,7 @@
             <div class="card h-100">
                 <a href="/wantlist/{{ want.basic_information.id }}/{{ want.basic_information.artists[0].name|slugify }}/{{ want.basic_information.title|slugify }}">
                     <img class="card-img-top rounded p-2" 
-                         src="{{ cover_image(want.basic_information.cover_image, want.basic_information.id) }}" 
+                         src="{{ wantlist_cover_image(want.basic_information.cover_image, want.basic_information.id) }}" 
                          alt="{{ want.basic_information.title }}">
                 </a>
 

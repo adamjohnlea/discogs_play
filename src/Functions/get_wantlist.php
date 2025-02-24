@@ -12,9 +12,11 @@ function get_wantlist() {
     require_once __DIR__ . '/../Services/DiscogsService.php';
     require_once __DIR__ . '/../Services/WantlistCacheService.php';
     require_once __DIR__ . '/../Services/LogService.php';
+    require_once __DIR__ . '/../Services/WantlistImageService.php';
     $discogsService = new DiscogsService($config);
     $cacheService = new WantlistCacheService($config);
     $logger = LogService::getInstance($config);
+    $imageService = new WantlistImageService($config);
     
     try {
         $url = $discogsService->buildUrl("/users/:username/wants", $_SESSION['user_id']);
@@ -41,11 +43,27 @@ function get_wantlist() {
         if (isset($data['wants'])) {
             foreach ($data['wants'] as $want) {
                 if (isset($want['basic_information'])) {
-                    $cacheService->cacheWantlistItem(
-                        $want['basic_information']['id'],
-                        $want['basic_information'],
-                        true
-                    );
+                    $releaseId = $want['basic_information']['id'];
+                    
+                    // Check if we already have detailed data for this item
+                    // If we have detailed data (is_basic_data = 0), don't overwrite it with basic data
+                    if (!$cacheService->isWantlistCacheValid($releaseId, false)) {
+                        // Only cache basic data if we don't have detailed data
+                        $cacheService->cacheWantlistItem(
+                            $releaseId,
+                            $want['basic_information'],
+                            true
+                        );
+                    }
+                    
+                    // Always cache the cover image if needed
+                    if (isset($want['basic_information']['cover_image']) && !empty($want['basic_information']['cover_image'])) {
+                        // This will download and cache the image
+                        $imageService->getWantlistCoverImage(
+                            $want['basic_information']['cover_image'],
+                            $releaseId
+                        );
+                    }
                 }
             }
         }

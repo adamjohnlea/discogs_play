@@ -61,6 +61,31 @@ function get_wantlist_info($release_id) {
         // Cache the wantlist item data
         $cacheService->cacheWantlistItem($release_id, $data);
         
+        // Also cache the images if present
+        if (isset($data['images']) && is_array($data['images'])) {
+            require_once __DIR__ . '/../Services/WantlistImageService.php';
+            $imageService = new WantlistImageService($config);
+            
+            // Cache the first image as cover image if it exists
+            if (!empty($data['images'][0]['resource_url'])) {
+                $imageService->getWantlistCoverImage(
+                    $data['images'][0]['resource_url'],
+                    $release_id
+                );
+            }
+            
+            // Cache all images in the list
+            foreach ($data['images'] as $index => $image) {
+                if (!empty($image['resource_url'])) {
+                    $imageService->getWantlistImage(
+                        $image['resource_url'],
+                        $release_id,
+                        $index
+                    );
+                }
+            }
+        }
+        
         return $data;
     } catch (Exception $e) {
         $logger->error('Error in get_wantlist_info: ' . $e->getMessage());

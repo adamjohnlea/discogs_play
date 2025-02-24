@@ -103,14 +103,32 @@ class WantlistImageService {
     }
 
     private function downloadImage($url) {
-        $context = stream_context_create([
-            'http' => [
-                'user_agent' => 'Mozilla/5.0 (compatible; DiscogsCollectionPlayer/1.0)',
-                'timeout' => 30
-            ]
-        ]);
-        
-        return @file_get_contents($url, false, $context);
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'DiscogsPlayer/1.0');
+            
+            $imageData = curl_exec($ch);
+            
+            if ($imageData === false) {
+                curl_close($ch);
+                return false;
+            }
+            
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode !== 200) {
+                return false;
+            }
+            
+            return $imageData ?: false;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     private function getMimeType($imageData) {
