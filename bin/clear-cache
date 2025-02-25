@@ -4,9 +4,46 @@
 require_once __DIR__ . '/../src/bootstrap.php';
 
 $cacheService = new CacheService($config);
-if ($cacheService->clearCache()) {
-    echo "Cache cleared successfully.\n";
-} else {
-    echo "Failed to clear cache.\n";
+$db = DatabaseService::getInstance($config)->getConnection();
+
+try {
+    // Clear standard cache tables
+    if ($cacheService->clearCache()) {
+        echo "Standard cache tables cleared successfully.\n";
+    } else {
+        echo "Failed to clear standard cache tables.\n";
+        exit(1);
+    }
+    
+    // Clear additional wantlist and collection tables
+    echo "Clearing additional tables...\n";
+    
+    $tables = [
+        'collection_search',
+        'wantlist_images',
+        'wantlist_items',
+        'wantlist_search'
+    ];
+    
+    $success = true;
+    foreach ($tables as $table) {
+        try {
+            $result = $db->exec("DELETE FROM " . $table);
+            echo "- Table {$table} cleared successfully.\n";
+        } catch (Exception $e) {
+            echo "- Failed to clear table {$table}: " . $e->getMessage() . "\n";
+            $success = false;
+        }
+    }
+    
+    if ($success) {
+        echo "All cache data cleared successfully.\n";
+        exit(0);
+    } else {
+        echo "Failed to clear some cache tables.\n";
+        exit(1);
+    }
+} catch (Exception $e) {
+    echo "Error clearing cache: " . $e->getMessage() . "\n";
     exit(1);
 } 
