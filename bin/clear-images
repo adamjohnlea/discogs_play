@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+// Image directories to clear
+$imageDirs = [
+    __DIR__ . '/../public/img/covers',
+    __DIR__ . '/../public/img/releases',
+    __DIR__ . '/../public/img/wantlist/covers',
+    __DIR__ . '/../public/img/wantlist/releases'
+];
+
+echo "Starting image cleanup...\n";
+$success = true;
+
+foreach ($imageDirs as $dir) {
+    try {
+        echo "Cleaning directory: " . basename($dir) . "\n";
+        
+        if (!is_dir($dir)) {
+            echo "- Warning: Directory does not exist: $dir\n";
+            continue;
+        }
+        
+        $files = glob($dir . '/*');
+        $filesRemoved = 0;
+        
+        foreach ($files as $file) {
+            // Skip directories and .gitkeep files
+            if (is_dir($file) || basename($file) === '.gitkeep') {
+                continue;
+            }
+            
+            if (unlink($file)) {
+                $filesRemoved++;
+            } else {
+                echo "- Failed to remove file: " . basename($file) . "\n";
+                $success = false;
+            }
+        }
+        
+        echo "- Removed $filesRemoved files from " . basename($dir) . "\n";
+        
+    } catch (Exception $e) {
+        echo "- Error processing directory $dir: " . $e->getMessage() . "\n";
+        $success = false;
+    }
+}
+
+if ($success) {
+    echo "All image directories have been successfully cleared.\n";
+    exit(0);
+} else {
+    echo "There were issues clearing some image files.\n";
+    exit(1);
+} 
