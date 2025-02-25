@@ -17,17 +17,31 @@ function get_wantlist_info($release_id) {
     try {
         // Check cache first
         $cachedData = $cacheService->getCachedWantlistItem($release_id);
-        if ($cachedData && $cacheService->isWantlistCacheValid($release_id)) {
+        
+        // Check if the cached data is valid and not just a placeholder
+        $isPlaceholder = $cachedData && isset($cachedData['data']['placeholder']) && $cachedData['data']['placeholder'] === true;
+        $isValid = $cachedData && $cacheService->isWantlistItemCacheValid($release_id) && !$isPlaceholder;
+        
+        if ($isValid) {
             $logger->info('Returning cached wantlist item', [
                 'id' => $release_id,
-                'data' => json_encode($cachedData['data'])
+                'data' => json_encode($cachedData['data']),
+                'is_placeholder' => 'no'
             ]);
             return $cachedData['data'];
         }
         
-        $logger->info('Fetching wantlist item from Discogs', ['id' => $release_id]);
+        // Log whether we're skipping placeholder data
+        if ($isPlaceholder) {
+            $logger->info('Skipping placeholder wantlist item data', [
+                'id' => $release_id,
+                'fetching_from_api' => 'yes'
+            ]);
+        } else {
+            $logger->info('Fetching wantlist item from Discogs', ['id' => $release_id]);
+        }
         
-        // If not in cache or cache is invalid, fetch from Discogs
+        // If not in cache, cache is invalid, or is just a placeholder, fetch from Discogs
         $url = $discogsService->buildUrl("/releases/{$release_id}");
         $context = $discogsService->getApiContext($_SESSION['user_id']);
         

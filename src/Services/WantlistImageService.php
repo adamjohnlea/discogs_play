@@ -25,6 +25,9 @@ class WantlistImageService {
     }
 
     public function getWantlistCoverImage($imageUrl, $wantlistItemId) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
         $logger = LogService::getInstance($this->config);
         $logger->info('Requesting wantlist cover image', [
             'wantlist_item_id' => $wantlistItemId,
@@ -102,6 +105,9 @@ class WantlistImageService {
     }
 
     public function getWantlistImage($imageUrl, $wantlistItemId, $index = 0) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
         $logger = LogService::getInstance($this->config);
         $logger->info('Requesting wantlist item image', [
             'wantlist_item_id' => $wantlistItemId,
@@ -180,6 +186,9 @@ class WantlistImageService {
     }
 
     private function ensureWantlistItemExists($wantlistItemId) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
         if (!$this->cacheService->wantlistItemExists($wantlistItemId)) {
             $this->cacheService->createPlaceholderWantlistItem($wantlistItemId);
         }

@@ -33,35 +33,35 @@ class WantlistCacheService {
         return $result;
     }
     
-    // public function isWantlistCacheValid($id, $allowBasicData = false) {
-    //     $stmt = $this->db->prepare("
-    //         SELECT data, is_basic_data 
-    //         FROM wantlist_items 
-    //         WHERE id = :id
-    //         AND user_id = :user_id
-    //     ");
+    public function checkWantlistCacheValidity($id, $allowBasicData = false) {
+        $stmt = $this->db->prepare("
+            SELECT data, is_basic_data 
+            FROM wantlist_items 
+            WHERE id = :id
+            AND user_id = :user_id
+        ");
         
-    //     $stmt->execute([
-    //         ':id' => $id,
-    //         ':user_id' => $_SESSION['user_id']
-    //     ]);
-    //     $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->execute([
+            ':id' => $id,
+            ':user_id' => $_SESSION['user_id']
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-    //     if (!$result) {
-    //         return false;
-    //     }
+        if (!$result) {
+            return false;
+        }
         
-    //     $data = json_decode($result['data'], true);
-    //     if (empty($data)) {
-    //         return false;
-    //     }
+        $data = json_decode($result['data'], true);
+        if (empty($data)) {
+            return false;
+        }
 
-    //     if ($result['is_basic_data'] && !$allowBasicData) {
-    //         return false;
-    //     }
+        if ($result['is_basic_data'] && !$allowBasicData) {
+            return false;
+        }
         
-    //     return true;
-    // }
+        return true;
+    }
     
     public function cacheWantlistItem($id, $data, $isBasicData = false) {
         require_once __DIR__ . '/../Services/LogService.php';
@@ -177,6 +177,9 @@ class WantlistCacheService {
     }
     
     public function getCachedImage($wantlistItemId, $type, $imageUrl) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
         if (!in_array($type, $this->imageTypes)) {
             throw new InvalidArgumentException("Invalid image type: {$type}");
         }
@@ -201,6 +204,15 @@ class WantlistCacheService {
     }
     
     public function isImageCacheValid($wantlistItemId, $type, $imageUrl) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
+        if (!in_array($type, $this->imageTypes)) {
+            throw new InvalidArgumentException("Invalid image type: {$type}");
+        }
+        
+        $maxAge = 60 * 60 * 24 * 30; // 30 days cache validity
+        
         $stmt = $this->db->prepare("
             SELECT 1 
             FROM wantlist_images 
@@ -221,6 +233,9 @@ class WantlistCacheService {
     }
     
     public function cacheImage($wantlistItemId, $type, $imageUrl, $filePath, $mimeType) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
         require_once __DIR__ . '/../Services/LogService.php';
         $logger = LogService::getInstance($this->config);
         
@@ -294,14 +309,50 @@ class WantlistCacheService {
         return $success;
     }
     
-    public function createPlaceholderWantlistItem($id) {
-        return $this->cacheWantlistItem($id, ['id' => $id], true);
+    public function wantlistItemExists($wantlistItemId) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
+        $stmt = $this->db->prepare("
+            SELECT 1 FROM wantlist_items 
+            WHERE id = :id
+            AND user_id = :user_id
+        ");
+        
+        $stmt->execute([
+            ':id' => $wantlistItemId,
+            ':user_id' => $_SESSION['user_id']
+        ]);
+        
+        return (bool)$stmt->fetch(PDO::FETCH_COLUMN);
     }
     
-    public function wantlistItemExists($id) {
-        $stmt = $this->db->prepare("SELECT 1 FROM wantlist_items WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        return (bool)$stmt->fetch(PDO::FETCH_COLUMN);
+    public function createPlaceholderWantlistItem($wantlistItemId) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
+        // Create a placeholder with minimal data 
+        $placeholderData = [
+            'id' => $wantlistItemId,
+            'placeholder' => true,
+            'last_updated' => time()
+        ];
+        
+        $stmt = $this->db->prepare("
+            INSERT OR REPLACE INTO wantlist_items (
+                id, data, is_basic_data, last_updated, user_id
+            ) VALUES (
+                :id, :data, :is_basic_data, :last_updated, :user_id
+            )
+        ");
+        
+        $stmt->execute([
+            ':id' => $wantlistItemId,
+            ':data' => json_encode($placeholderData),
+            ':is_basic_data' => 1,
+            ':last_updated' => date('Y-m-d H:i:s'),
+            ':user_id' => $_SESSION['user_id']
+        ]);
     }
     
     /**
@@ -315,8 +366,11 @@ class WantlistCacheService {
         $logger = LogService::getInstance($this->config);
         
         try {
-            // Use a special ID format to identify this as the complete wantlist
-            $cacheKey = "wantlist_full_{$_SESSION['user_id']}";
+            $startTime = microtime(true);
+            
+            // Use an integer ID format to identify this as the complete wantlist
+            // 99000000 prefix + user_id ensures uniqueness and keeps it as an integer
+            $cacheKey = 99000000 + $_SESSION['user_id'];
             
             // Store or update the wantlist data in the wantlist_items table
             $stmt = $this->db->prepare("
@@ -336,13 +390,20 @@ class WantlistCacheService {
                 ':user_id' => $_SESSION['user_id']
             ]);
             
+            $endTime = microtime(true);
+            $elapsedTime = round(($endTime - $startTime) * 1000, 2); // ms
+            
             if ($success) {
                 $logger->info('Cached complete wantlist data', [
                     'user_id' => $_SESSION['user_id'],
-                    'wants_count' => isset($data['wants']) ? count($data['wants']) : 0
+                    'cache_key' => $cacheKey,
+                    'wants_count' => isset($data['wants']) ? count($data['wants']) : 0,
+                    'time_ms' => $elapsedTime
                 ]);
             } else {
-                $logger->error('Failed to cache wantlist data');
+                $logger->error('Failed to cache wantlist data', [
+                    'time_ms' => $elapsedTime
+                ]);
             }
             
             return $success;
@@ -362,14 +423,18 @@ class WantlistCacheService {
         $logger = LogService::getInstance($this->config);
         
         try {
-            // Use the same key format as in cacheWantlist
-            $cacheKey = "wantlist_full_{$_SESSION['user_id']}";
+            $startTime = microtime(true);
             
+            // Use the same key format as in cacheWantlist
+            $cacheKey = 99000000 + $_SESSION['user_id'];
+            
+            // Remove the INDEXED BY clause which is causing errors
             $stmt = $this->db->prepare("
                 SELECT data, last_updated
                 FROM wantlist_items
                 WHERE id = :id
                 AND user_id = :user_id
+                LIMIT 1
             ");
             
             $stmt->execute([
@@ -380,23 +445,39 @@ class WantlistCacheService {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$result) {
-                $logger->info('No cached wantlist data found');
+                $endTime = microtime(true);
+                $elapsedTime = round(($endTime - $startTime) * 1000, 2); // ms
+                
+                $logger->info('No cached wantlist data found', [
+                    'time_ms' => $elapsedTime
+                ]);
                 return null;
             }
             
+            // Decode data after checking validity
+            $decodingStart = microtime(true);
             $data = json_decode($result['data'], true);
+            $decodingTime = round((microtime(true) - $decodingStart) * 1000, 2); // ms
+            
+            $endTime = microtime(true);
+            $elapsedTime = round(($endTime - $startTime) * 1000, 2); // ms
             
             if (isset($data['user_id']) && $data['user_id'] != $_SESSION['user_id']) {
                 $logger->warning('Cached wantlist belongs to different user', [
                     'cached_user_id' => $data['user_id'],
-                    'current_user_id' => $_SESSION['user_id']
+                    'current_user_id' => $_SESSION['user_id'],
+                    'time_ms' => $elapsedTime,
+                    'decoding_ms' => $decodingTime
                 ]);
                 return null;
             }
             
             $logger->info('Retrieved cached wantlist data', [
                 'last_updated' => $result['last_updated'],
-                'wants_count' => isset($data['wants']) ? count($data['wants']) : 0
+                'wants_count' => isset($data['wants']) ? count($data['wants']) : 0,
+                'time_ms' => $elapsedTime,
+                'decoding_ms' => $decodingTime,
+                'data_size_kb' => round(strlen($result['data']) / 1024, 2)
             ]);
             
             return $data;
@@ -406,19 +487,28 @@ class WantlistCacheService {
         }
     }
     
+    /**
+     * Check if the entire wantlist cache is valid
+     *
+     * @return boolean True if the cache is valid, false otherwise
+     */
     public function isWantlistCacheValid() {
         require_once __DIR__ . '/../Services/LogService.php';
         $logger = LogService::getInstance($this->config);
         
         try {
-            // Use the same key format as in cacheWantlist
-            $cacheKey = "wantlist_full_{$_SESSION['user_id']}";
+            $startTime = microtime(true);
             
+            // Use the same key format as in cacheWantlist
+            $cacheKey = 99000000 + $_SESSION['user_id'];
+            
+            // Remove the INDEXED BY clause which is causing errors
             $stmt = $this->db->prepare("
                 SELECT last_updated
                 FROM wantlist_items
                 WHERE id = :id
                 AND user_id = :user_id
+                LIMIT 1
             ");
             
             $stmt->execute([
@@ -429,7 +519,14 @@ class WantlistCacheService {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$result) {
-                $logger->info('No cached wantlist found to validate');
+                $endTime = microtime(true);
+                $elapsedTime = round(($endTime - $startTime) * 1000, 2); // ms
+                
+                $logger->info('No cached wantlist found to validate', [
+                    'time_ms' => $elapsedTime,
+                    'cache_key' => $cacheKey,
+                    'user_id' => $_SESSION['user_id']
+                ]);
                 return false;
             }
             
@@ -440,17 +537,105 @@ class WantlistCacheService {
             $cacheAge = time() - strtotime($result['last_updated']);
             $isValid = $cacheAge < $cacheDuration;
             
+            $endTime = microtime(true);
+            $elapsedTime = round(($endTime - $startTime) * 1000, 2); // ms
+            
             $logger->info('Checked wantlist cache validity', [
                 'cache_age_seconds' => $cacheAge,
                 'cache_duration' => $cacheDuration,
                 'is_valid' => $isValid ? 'yes' : 'no',
-                'last_updated' => $result['last_updated']
+                'last_updated' => $result['last_updated'],
+                'time_ms' => $elapsedTime,
+                'config_has_wantlist_duration' => isset($this->config['cache']['wantlist_duration']) ? 'yes' : 'no'
             ]);
             
             return $isValid;
         } catch (Exception $e) {
             $logger->error('Exception checking wantlist cache validity: ' . $e->getMessage());
             return false;
+        }
+    }
+    
+    /**
+     * Check if a specific wantlist item's cache is valid
+     * 
+     * @param integer $id The release ID to check
+     * @param boolean $allowBasicData Whether to consider basic data valid (default: false)
+     * @return boolean True if the cache is valid, false otherwise
+     */
+    public function isWantlistItemCacheValid($id, $allowBasicData = false) {
+        require_once __DIR__ . '/../Services/LogService.php';
+        $logger = LogService::getInstance($this->config);
+        
+        try {
+            // Ensure id is an integer
+            $id = (int)$id;
+            
+            $stmt = $this->db->prepare("
+                SELECT data, is_basic_data, last_updated
+                FROM wantlist_items
+                WHERE id = :id
+                AND user_id = :user_id
+                LIMIT 1
+            ");
+            
+            $stmt->execute([
+                ':id' => $id,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$result) {
+                $logger->info("No cached wantlist item found for ID: {$id}");
+                return false;
+            }
+            
+            // Check if this is just a placeholder record
+            $data = json_decode($result['data'], true);
+            if (isset($data['placeholder']) && $data['placeholder'] === true) {
+                $logger->info("Wantlist item ID: {$id} is just a placeholder record", [
+                    'is_basic_data' => $result['is_basic_data'] ? 'yes' : 'no'
+                ]);
+                return false; // Placeholder records are not valid
+            }
+            
+            // If we don't allow basic data and this is basic data, it's not valid
+            if (!$allowBasicData && $result['is_basic_data']) {
+                $logger->info("Wantlist item ID: {$id} is basic data, but detailed data is required");
+                return false;
+            }
+            
+            // Use a configurable cache duration - default to 30 days if not set
+            $cacheDuration = isset($this->config['cache']['wantlist_item_duration']) ? 
+                $this->config['cache']['wantlist_item_duration'] : 2592000; // 30 days in seconds
+            
+            $cacheAge = time() - strtotime($result['last_updated']);
+            $isValid = $cacheAge < $cacheDuration;
+            
+            $logger->info("Checked wantlist item cache validity for ID: {$id}", [
+                'cache_age_seconds' => $cacheAge,
+                'cache_duration' => $cacheDuration,
+                'is_valid' => $isValid ? 'yes' : 'no',
+                'last_updated' => $result['last_updated'],
+                'is_basic_data' => $result['is_basic_data'] ? 'yes' : 'no'
+            ]);
+            
+            return $isValid;
+        } catch (Exception $e) {
+            $logger->error("Exception checking wantlist item cache validity: " . $e->getMessage(), [
+                'id' => $id
+            ]);
+            return false;
+        }
+    }
+
+    private function ensureWantlistItemExists($wantlistItemId) {
+        // Ensure wantlistItemId is an integer
+        $wantlistItemId = (int)$wantlistItemId;
+        
+        if (!$this->wantlistItemExists($wantlistItemId)) {
+            $this->createPlaceholderWantlistItem($wantlistItemId);
         }
     }
 } 

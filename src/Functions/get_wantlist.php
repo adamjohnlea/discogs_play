@@ -18,19 +18,29 @@ function get_wantlist() {
     $logger = LogService::getInstance($config);
     $imageService = new WantlistImageService($config);
     
+    // Start timing for cache check
+    $cacheCheckStart = microtime(true);
+    
     // First check if we have valid cached wantlist data we can use
     $cachedWantlist = $cacheService->getCachedWantlist();
     $isCacheValid = $cacheService->isWantlistCacheValid();
     
+    $cacheCheckEnd = microtime(true);
+    $cacheCheckTime = round(($cacheCheckEnd - $cacheCheckStart) * 1000, 2); // ms
+    $logger->info('Cache check time', ['time_ms' => $cacheCheckTime]);
+    
     // If we have valid cached data, use it instead of hitting the API
     if ($cachedWantlist && $isCacheValid) {
-        $logger->info('Using valid cached wantlist data instead of API call');
+        $logger->info('Using valid cached wantlist data instead of API call', [
+            'cache_check_time_ms' => $cacheCheckTime
+        ]);
         return $cachedWantlist;
     }
     
     $logger->info('No valid wantlist cache found, fetching from API', [
         'has_cache' => $cachedWantlist ? 'yes' : 'no',
-        'cache_valid' => $isCacheValid ? 'yes' : 'no'
+        'cache_valid' => $isCacheValid ? 'yes' : 'no',
+        'cache_check_time_ms' => $cacheCheckTime
     ]);
     
     try {
@@ -44,12 +54,17 @@ function get_wantlist() {
             $context = stream_context_create($opts);
         }
         
+        // Start timing API request
+        $apiStart = microtime(true);
         $response = @file_get_contents($url, false, $context);
+        $apiEnd = microtime(true);
+        $apiTime = round(($apiEnd - $apiStart) * 1000, 2); // ms
         
         if ($response === false) {
             $http_response_header_str = isset($http_response_header) ? implode(', ', $http_response_header) : 'No headers';
             $logger->error('Failed to fetch wantlist from Discogs API', [
-                'headers' => $http_response_header_str
+                'headers' => $http_response_header_str,
+                'api_time_ms' => $apiTime
             ]);
             
             // If we have cached data, use it even if it's expired when API fails
@@ -87,7 +102,9 @@ function get_wantlist() {
         
         $data = json_decode($response, true);
         if ($data === null) {
-            $logger->error('Invalid JSON response from Discogs API for wantlist');
+            $logger->error('Invalid JSON response from Discogs API for wantlist', [
+                'api_time_ms' => $apiTime
+            ]);
             
             // If we have cached data, use it even if it's expired when API returns invalid data
             if ($cachedWantlist) {
@@ -99,6 +116,9 @@ function get_wantlist() {
                 'error' => 'Invalid response from Discogs. Please try again.'
             ];
         }
+        
+        // Start timing caching operations
+        $cachingStart = microtime(true);
         
         // Cache the entire wantlist response for future fallback
         $cacheService->cacheWantlist($data);
@@ -120,6 +140,10 @@ function get_wantlist() {
                         );
                     }
                     
+                    // For initial requests, don't download and cache images as it adds substantial overhead
+                    // Images will be downloaded and cached on demand when needed
+                    // When a specific item is viewed, the image will be downloaded then
+                    /*
                     // Always cache the cover image if needed
                     if (isset($want['basic_information']['cover_image']) && !empty($want['basic_information']['cover_image'])) {
                         // This will download and cache the image
@@ -128,9 +152,19 @@ function get_wantlist() {
                             $releaseId
                         );
                     }
+                    */
                 }
             }
         }
+        
+        $cachingEnd = microtime(true);
+        $cachingTime = round(($cachingEnd - $cachingStart) * 1000, 2); // ms
+        
+        $logger->info('Wantlist fetch and cache complete', [
+            'api_time_ms' => $apiTime,
+            'caching_time_ms' => $cachingTime,
+            'wants_count' => isset($data['wants']) ? count($data['wants']) : 0
+        ]);
         
         return $data;
     } catch (Exception $e) {
