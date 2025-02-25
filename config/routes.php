@@ -28,6 +28,7 @@ return function($router) {
     // Collection routes
     $router->add('/collection', ['CollectionController', 'index']);
     $router->add('/collection/search', ['CollectionController', 'search']);
+    $router->add('/collection/refresh', ['CollectionController', 'refreshCollection']);
     
     // Release routes
     $router->add('/release/:id/:artist/:title', ['ReleaseController', 'show']);
@@ -35,6 +36,7 @@ return function($router) {
     // Wantlist routes
     $router->add('/wantlist', ['WantlistController', 'index']);
     $router->add('/wantlist/:id/:artist/:title', ['WantlistController', 'show']);
+    $router->add('/wantlist/refresh', ['WantlistController', 'refreshWantlist']);
     
     // Root path
     $router->add('/', ['HomeController', 'index']);

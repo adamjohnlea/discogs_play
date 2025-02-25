@@ -3,6 +3,15 @@
 {% block title %}{{ app_name }} - Collection{% endblock %}
 
 {% block content %}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2>My Collection</h2>
+        <a href="/collection/refresh" class="btn btn-outline-primary">
+            <i class="fa-solid fa-sync-alt"></i> Refresh Collection
+        </a>
+    </div>
+</div>
+
 <div class="row">
     {% if collection.error is defined and collection.error %}
         <div class="col-12">
@@ -18,7 +27,8 @@
             <div class="card h-100">
                 <a href="{{ release_url(item.basic_information.id, item.basic_information) }}">
                     <img class="card-img-top rounded p-2" 
-                         src="{{ cover_image(item.basic_information.cover_image, item.basic_information.id) }}" 
+                         src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+                         data-src="{{ cover_image(item.basic_information.cover_image, item.basic_information.id) }}" 
                          alt="{{ item.basic_information.title }}">
                 </a>
 

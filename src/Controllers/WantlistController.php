@@ -123,4 +123,20 @@ class WantlistController {
             ]);
         }
     }
+
+    /**
+     * Refreshes the user's wantlist from Discogs
+     */
+    public function refreshWantlist() {
+        require_once __DIR__ . '/../Services/LogService.php';
+        $logger = LogService::getInstance($this->config);
+        $logger->info('User manually refreshed wantlist');
+        
+        // Force refresh by setting last updated timestamp to the past
+        $_SESSION['wantlist_last_updated'] = 0;
+        
+        // Redirect to wantlist page which will trigger a fresh load
+        header('Location: /wantlist');
+        exit();
+    }
 } 

@@ -296,4 +296,20 @@ class CollectionController {
             throw $e;
         }
     }
+
+    /**
+     * Refreshes the user's collection from Discogs
+     */
+    public function refreshCollection() {
+        require_once __DIR__ . '/../Services/LogService.php';
+        $logger = LogService::getInstance($this->config);
+        $logger->info('User manually refreshed collection');
+        
+        // Force refresh by setting last updated timestamp to the past
+        $_SESSION['collection_last_updated'] = 0;
+        
+        // Redirect to collection page which will trigger a fresh load
+        header('Location: /collection');
+        exit();
+    }
 } 

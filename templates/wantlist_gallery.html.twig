@@ -3,6 +3,15 @@
 {% block title %}{{ app_name }} - Wantlist{% endblock %}
 
 {% block content %}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2>My Wantlist</h2>
+        <a href="/wantlist/refresh" class="btn btn-outline-primary">
+            <i class="fa-solid fa-sync-alt"></i> Refresh Wantlist
+        </a>
+    </div>
+</div>
+
 <div class="row">
     {% if wantlist.error is defined and wantlist.error %}
         <div class="col-12">
@@ -18,7 +27,8 @@
             <div class="card h-100">
                 <a href="/wantlist/{{ want.basic_information.id }}/{{ want.basic_information.artists[0].name|slugify }}/{{ want.basic_information.title|slugify }}">
                     <img class="card-img-top rounded p-2" 
-                         src="{{ wantlist_cover_image(want.basic_information.cover_image, want.basic_information.id) }}" 
+                         src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+                         data-src="{{ wantlist_cover_image(want.basic_information.cover_image, want.basic_information.id) }}" 
                          alt="{{ want.basic_information.title }}">
                 </a>
 

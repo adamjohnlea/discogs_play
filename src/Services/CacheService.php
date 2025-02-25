@@ -4,10 +4,12 @@ require_once __DIR__ . '/LogService.php';
 
 class CacheService {
     private $db;
+    private $config;
     private $imageTypes = ['cover', 'release'];
     private $collectionCacheDuration = 86400; // 24 hours in seconds
     
     public function __construct($config) {
+        $this->config = $config;
         $this->db = DatabaseService::getInstance($config)->getConnection();
         
         // Allow override of cache duration for testing
@@ -22,20 +24,72 @@ class CacheService {
         return true;
     }
     
-    public function cacheRelease($releaseId, $releaseData, $myReleaseData = null, $isBasicData = false) {
-        $stmt = $this->db->prepare("
-            INSERT OR REPLACE INTO releases (id, data, my_data, is_basic_data, last_updated)
-            VALUES (:id, :data, :my_data, :is_basic_data, CURRENT_TIMESTAMP)
-        ");
+    public function cacheRelease($id, $data, $isBasicData = false) {
+        require_once __DIR__ . '/../Services/LogService.php';
+        $logger = LogService::getInstance($this->config);
         
-        $result = $stmt->execute([
-            ':id' => $releaseId,
-            ':data' => json_encode($releaseData),
-            ':my_data' => $myReleaseData ? json_encode($myReleaseData) : null,
-            ':is_basic_data' => $isBasicData ? 1 : 0
+        // Check if data has changed or if we have detailed data
+        $existingData = $this->getCachedRelease($id);
+        $newDataJson = json_encode($data);
+        $existingDataJson = $existingData ? json_encode($existingData['data']) : null;
+        
+        // Log current state
+        $logger->info('Checking if release data changed', [
+            'release_id' => $id,
+            'has_existing_data' => $existingData ? 'yes' : 'no',
+            'existing_is_basic' => $existingData ? ($existingData['is_basic_data'] ? 'yes' : 'no') : 'n/a',
+            'new_is_basic' => $isBasicData ? 'yes' : 'no',
+            'data_size' => strlen($newDataJson)
         ]);
         
-        return $result;
+        // Don't overwrite detailed data with basic data
+        if ($existingData && !$existingData['is_basic_data'] && $isBasicData) {
+            $logger->info('Skipping update: Not replacing detailed release data with basic data', [
+                'release_id' => $id
+            ]);
+            return true; // Keep detailed data
+        }
+        
+        // Only update if data has changed
+        if (!$existingData || $existingDataJson !== $newDataJson) {
+            $logger->info('Updating release data', [
+                'release_id' => $id,
+                'reason' => !$existingData ? 'no_existing_data' : 'data_changed',
+                'is_basic_data' => $isBasicData ? 'yes' : 'no'
+            ]);
+            
+            $stmt = $this->db->prepare("
+                INSERT OR REPLACE INTO releases 
+                (id, data, is_basic_data, last_updated, user_id) 
+                VALUES (:id, :data, :is_basic_data, datetime('now'), :user_id)
+            ");
+            
+            $success = $stmt->execute([
+                ':id' => $id,
+                ':data' => $newDataJson,
+                ':is_basic_data' => $isBasicData ? 1 : 0,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+
+            $logger->info('Release update ' . ($success ? 'successful' : 'failed'), [
+                'release_id' => $id
+            ]);
+            
+            if ($success) {
+                // No search index update in CacheService
+                $logger->info('Release cached successfully', [
+                    'release_id' => $id
+                ]);
+            }
+
+            return $success;
+        }
+        
+        $logger->info('No update needed: Release data unchanged', [
+            'release_id' => $id
+        ]);
+        
+        return true; // No update needed
     }
     
     public function getCachedRelease($releaseId) {

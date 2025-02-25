@@ -36,6 +36,10 @@ class LogService {
         $this->log('DEBUG', $message, $context);
     }
     
+    public function warning($message, $context = []) {
+        $this->log('WARNING', $message, $context);
+    }
+    
     private function log($level, $message, $context = []) {
         $timestamp = date('Y-m-d H:i:s');
         $contextStr = empty($context) ? '' : ' ' . json_encode($context, JSON_PRETTY_PRINT);

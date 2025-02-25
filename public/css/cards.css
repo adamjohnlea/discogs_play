@@ -83,4 +83,34 @@
     background-color: var(--component-bg);
     border-color: var(--border-color);
     color: var(--bs-body-color);
+}
+
+/* Add lazy loading styles */
+img.loading {
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+img[data-src] {
+    opacity: 0.2;
+    background-color: #f0f0f0;
+    position: relative;
+    min-height: 100px;
+}
+
+img[data-src]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #ccc;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 } 
