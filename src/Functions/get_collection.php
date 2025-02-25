@@ -39,6 +39,14 @@ function get_collection() {
         $url .= "?sort={$sort_by}&sort_order={$order}&page={$page}&per_page={$per_page}";
         
         $context = $discogsService->getApiContext($_SESSION['user_id']);
+        
+        // Set a timeout to avoid hanging requests
+        $opts = stream_context_get_options($context);
+        if (isset($opts['http'])) {
+            $opts['http']['timeout'] = 30; // 30 seconds timeout
+            $context = stream_context_create($opts);
+        }
+        
         $pagedata = @file_get_contents($url, false, $context);
         
         if ($pagedata === false) {

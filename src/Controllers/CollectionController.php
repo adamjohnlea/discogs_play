@@ -104,14 +104,32 @@ class CollectionController {
             exit;
         }
 
-        // Get query parameters with defaults
-        $folder = $_GET['folder'] ?? 'all';
-        $sort = $_GET['sort'] ?? 'added';
-        $order = $_GET['order'] ?? 'desc';
-        $page = max(1, intval($_GET['page'] ?? 1));
-        $perPage = max(1, intval($_GET['per_page'] ?? 25));
-        
         try {
+            // Check if user has set up their Discogs OAuth credentials
+            $stmt = $this->db->prepare("
+                SELECT discogs_username, oauth_access_token 
+                FROM user_settings 
+                WHERE user_id = :user_id
+            ");
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+            $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$settings || empty($settings['discogs_username']) || empty($settings['oauth_access_token'])) {
+                // Redirect to settings if OAuth credentials are not set
+                header('Location: /settings');
+                exit;
+            }
+
+            // Set a longer timeout for the API request
+            ini_set('default_socket_timeout', 30); // 30 seconds timeout
+
+            // Get query parameters with defaults
+            $folder = $_GET['folder'] ?? 'all';
+            $sort = $_GET['sort'] ?? 'added';
+            $order = $_GET['order'] ?? 'desc';
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = max(1, intval($_GET['per_page'] ?? 25));
+            
             // Get collection data
             $collection = get_collection();
             $folders = get_folders();
@@ -154,12 +172,30 @@ class CollectionController {
             exit;
         }
 
-        $query = strtolower($_GET['q'] ?? '');
-        $folder = $_GET['folder'] ?? 'all';
-        $page = max(1, intval($_GET['page'] ?? 1));
-        $perPage = max(1, intval($_GET['per_page'] ?? 25));
-
         try {
+            // Check if user has set up their Discogs OAuth credentials
+            $stmt = $this->db->prepare("
+                SELECT discogs_username, oauth_access_token 
+                FROM user_settings 
+                WHERE user_id = :user_id
+            ");
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+            $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$settings || empty($settings['discogs_username']) || empty($settings['oauth_access_token'])) {
+                // Redirect to settings if OAuth credentials are not set
+                header('Location: /settings');
+                exit;
+            }
+
+            // Set a longer timeout for the API request
+            ini_set('default_socket_timeout', 30); // 30 seconds timeout
+
+            $query = strtolower($_GET['q'] ?? '');
+            $folder = $_GET['folder'] ?? 'all';
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = max(1, intval($_GET['per_page'] ?? 25));
+
             $folders = get_folders();
             $folderId = $this->folderService->getFolderId($folder);
             
@@ -301,15 +337,39 @@ class CollectionController {
      * Refreshes the user's collection from Discogs
      */
     public function refreshCollection() {
-        require_once __DIR__ . '/../Services/LogService.php';
-        $logger = LogService::getInstance($this->config);
-        $logger->info('User manually refreshed collection');
-        
-        // Force refresh by setting last updated timestamp to the past
-        $_SESSION['collection_last_updated'] = 0;
-        
-        // Redirect to collection page which will trigger a fresh load
-        header('Location: /collection');
-        exit();
+        if (!$this->authService->isLoggedIn()) {
+            header('Location: /login');
+            exit;
+        }
+
+        try {
+            // Check if user has set up their Discogs OAuth credentials
+            $stmt = $this->db->prepare("
+                SELECT discogs_username, oauth_access_token 
+                FROM user_settings 
+                WHERE user_id = :user_id
+            ");
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+            $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$settings || empty($settings['discogs_username']) || empty($settings['oauth_access_token'])) {
+                // Redirect to settings if OAuth credentials are not set
+                header('Location: /settings');
+                exit;
+            }
+
+            $this->logger->info('User manually refreshed collection');
+            
+            // Force refresh by setting last updated timestamp to the past
+            $_SESSION['collection_last_updated'] = 0;
+            
+            // Redirect to collection page which will trigger a fresh load
+            header('Location: /collection');
+            exit();
+        } catch (Exception $e) {
+            $this->logger->error('Error refreshing collection: ' . $e->getMessage());
+            header('Location: /settings');
+            exit;
+        }
     }
 } 
