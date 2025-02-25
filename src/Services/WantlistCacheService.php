@@ -7,8 +7,8 @@ class WantlistCacheService {
     
     public function __construct($config) {
         $this->config = $config;
-        $this->db = new PDO('sqlite:' . $config['database']['path']);
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        require_once __DIR__ . '/DatabaseService.php';
+        $this->db = DatabaseService::getInstance($config)->getConnection();
     }
     
     public function getCachedWantlistItem($id) {

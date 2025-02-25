@@ -16,25 +16,32 @@ class DiscogsService {
     }
     
     public function getUserCredentials($userId) {
-        $stmt = $this->db->prepare("
-            SELECT discogs_username, oauth_access_token, oauth_access_token_secret
-            FROM user_settings 
-            WHERE user_id = :user_id
-        ");
-        
-        $stmt->execute([':user_id' => $userId]);
-        $settings = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$settings || empty($settings['oauth_access_token']) || empty($settings['oauth_access_token_secret'])) {
-            throw new Exception('OAuth credentials not found. Please connect your Discogs account.');
-        }
+        try {
+            $stmt = $this->db->prepare("
+                SELECT discogs_username, oauth_access_token, oauth_access_token_secret
+                FROM user_settings 
+                WHERE user_id = :user_id
+            ");
+            
+            $stmt->execute([':user_id' => $userId]);
+            $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$settings || empty($settings['oauth_access_token']) || empty($settings['oauth_access_token_secret'])) {
+                // Log the missing credentials
+                $this->logger->error('OAuth credentials not found for user', ['user_id' => $userId]);
+                throw new Exception('OAuth credentials not found. Please connect your Discogs account.');
+            }
 
-        return [
-            'discogs_username' => $settings['discogs_username'],
-            'oauth_access_token' => $settings['oauth_access_token'],
-            'oauth_access_token_secret' => $settings['oauth_access_token_secret'],
-            'using_oauth' => true
-        ];
+            return [
+                'discogs_username' => $settings['discogs_username'],
+                'oauth_access_token' => $settings['oauth_access_token'],
+                'oauth_access_token_secret' => $settings['oauth_access_token_secret'],
+                'using_oauth' => true
+            ];
+        } catch (PDOException $e) {
+            $this->logger->error('Database error in getUserCredentials: ' . $e->getMessage());
+            throw new Exception('Database error while fetching credentials. Please try again.');
+        }
     }
     
     public function getApiContext($userId) {

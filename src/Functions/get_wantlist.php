@@ -40,7 +40,7 @@ function get_wantlist() {
         // Set a timeout to avoid hanging requests
         $opts = stream_context_get_options($context);
         if (isset($opts['http'])) {
-            $opts['http']['timeout'] = 5; // 5 seconds timeout
+            $opts['http']['timeout'] = 30; // 30 seconds timeout (increased from 5)
             $context = stream_context_create($opts);
         }
         
