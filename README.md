@@ -10,6 +10,8 @@ A web application for browsing and managing your Discogs record collection. Buil
   - Smooth animations and transitions
   - Dark theme optimized
   - Beautiful UI with Bootstrap 5
+  - FontAwesome icons for modern visuals
+  - Lazy loading of images for improved performance
 
 - **OAuth Authentication**:
   - Secure connection to your Discogs account
@@ -22,6 +24,12 @@ A web application for browsing and managing your Discogs record collection. Buil
   - Filter by Discogs folders
   - Adjustable items per page (25/50/100)
   - Persistent view preferences
+
+- **Wantlist Management**:
+  - Browse your Discogs wantlist items
+  - View detailed information about wanted releases
+  - Multiple images for each wantlist item
+  - Fast loading with optimized caching
 
 - **Fast Search**:
   - Search by title, artist, or label
@@ -92,11 +100,14 @@ A web application for browsing and managing your Discogs record collection. Buil
    ```bash
    ./bin/migrate migrate
    ```
+   This will create the necessary database tables and run all migrations, including adding user_id columns to relevant tables.
 
 6. Ensure the following directories are writable by your web server:
    - `cache/`
    - `public/img/covers/`
    - `public/img/releases/`
+   - `public/img/wantlist/`
+   - `public/img/wantlist/releases/`
    - `database/`
    - `logs/`
 
@@ -114,14 +125,17 @@ A web application for browsing and managing your Discogs record collection. Buil
 
 The application implements several caching layers:
 
-- **Collection Cache**: Caches your collection list for 24 hours
-- **Release Cache**: Caches individual release details
-- **Image Cache**: Caches cover art and additional images locally
+- **Collection Cache**: Caches your collection list for 24 hours with user-specific data
+- **Release Cache**: Caches individual release details with optimized storage
+- **Image Cache**: Caches cover art and additional images locally with improved organization
+- **Wantlist Cache**: Caches your Discogs wantlist items with user-specific data
 - **Search Index**: Maintains a local search index for fast queries
 
 To clear the cache and rebuild search index:
 1. Visit the settings page
-2. Click "Refresh Collection Data"
+2. Click "Refresh Collection Data" or "Refresh Wantlist Data" as needed
+
+The caching system is now optimized to handle multiple user accounts and prevents duplicate data storage.
 
 ## Development
 
