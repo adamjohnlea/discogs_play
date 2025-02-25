@@ -93,25 +93,40 @@ class CacheService {
     }
     
     public function getCachedRelease($releaseId) {
+        // First try to get user-specific release
         $stmt = $this->db->prepare("
-            SELECT data, my_data, is_basic_data, last_updated 
+            SELECT data, is_basic_data, last_updated 
             FROM releases 
-            WHERE id = :id
+            WHERE id = :id AND user_id = :user_id
         ");
         
-        $stmt->execute([':id' => $releaseId]);
+        $stmt->execute([
+            ':id' => $releaseId,
+            ':user_id' => $_SESSION['user_id'] ?? null
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // If not found, try to get any release data (for backward compatibility)
+        if (!$result) {
+            $stmt = $this->db->prepare("
+                SELECT data, is_basic_data, last_updated 
+                FROM releases 
+                WHERE id = :id AND (user_id IS NULL OR user_id = 0)
+            ");
+            
+            $stmt->execute([':id' => $releaseId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
         
         if (!$result) {
             return null;
         }
         
         $data = json_decode($result['data'], true);
-        $myData = $result['my_data'] ? json_decode($result['my_data'], true) : null;
         
         return [
             'data' => $data,
-            'my_data' => $myData,
+            'my_data' => null, // Set to null for backward compatibility
             'is_basic_data' => (bool)$result['is_basic_data'],
             'last_updated' => $result['last_updated']
         ];
@@ -129,8 +144,8 @@ class CacheService {
             // Cache the image
             $stmt = $this->db->prepare("
                 INSERT OR REPLACE INTO images 
-                (release_id, type, mime_type, original_url, file_path, last_updated)
-                VALUES (:release_id, :type, :mime_type, :original_url, :file_path, CURRENT_TIMESTAMP)
+                (release_id, type, mime_type, original_url, file_path, last_updated, user_id)
+                VALUES (:release_id, :type, :mime_type, :original_url, :file_path, CURRENT_TIMESTAMP, :user_id)
             ");
             
             $stmt->execute([
@@ -138,7 +153,8 @@ class CacheService {
                 ':type' => $type,
                 ':mime_type' => $mimeType,
                 ':original_url' => $imageUrl,
-                ':file_path' => $filePath
+                ':file_path' => $filePath,
+                ':user_id' => $_SESSION['user_id'] ?? null
             ]);
 
             // Commit transaction
@@ -156,32 +172,73 @@ class CacheService {
             throw new InvalidArgumentException("Invalid image type: {$type}");
         }
         
+        // First try user-specific image
         $stmt = $this->db->prepare("
             SELECT file_path, mime_type, last_updated 
             FROM images 
             WHERE release_id = :release_id 
             AND type = :type 
             AND original_url = :original_url
+            AND user_id = :user_id
         ");
         
         $stmt->execute([
             ':release_id' => $releaseId,
             ':type' => $type,
-            ':original_url' => $imageUrl
+            ':original_url' => $imageUrl,
+            ':user_id' => $_SESSION['user_id'] ?? null
         ]);
         
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // If not found, try shared/legacy image
+        if (!$result) {
+            $stmt = $this->db->prepare("
+                SELECT file_path, mime_type, last_updated 
+                FROM images 
+                WHERE release_id = :release_id 
+                AND type = :type 
+                AND original_url = :original_url
+                AND (user_id IS NULL OR user_id = 0)
+            ");
+            
+            $stmt->execute([
+                ':release_id' => $releaseId,
+                ':type' => $type,
+                ':original_url' => $imageUrl
+            ]);
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        
+        return $result;
     }
     
     public function isReleaseCacheValid($releaseId, $allowBasicData = false) {
+        // First try user-specific cache
         $stmt = $this->db->prepare("
             SELECT data, is_basic_data 
             FROM releases 
-            WHERE id = :id
+            WHERE id = :id AND user_id = :user_id
         ");
         
-        $stmt->execute([':id' => $releaseId]);
+        $stmt->execute([
+            ':id' => $releaseId,
+            ':user_id' => $_SESSION['user_id'] ?? null
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // If not found, try shared/legacy data
+        if (!$result) {
+            $stmt = $this->db->prepare("
+                SELECT data, is_basic_data 
+                FROM releases 
+                WHERE id = :id AND (user_id IS NULL OR user_id = 0)
+            ");
+            
+            $stmt->execute([':id' => $releaseId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
         
         if (!$result) {
             return false;
@@ -201,40 +258,61 @@ class CacheService {
     }
     
     public function isImageCacheValid($releaseId, $type, $imageUrl) {
-        // Always return true if the image exists in cache
+        // First check for user-specific images
         $stmt = $this->db->prepare("
             SELECT 1 
             FROM images 
             WHERE release_id = :release_id 
             AND type = :type 
             AND original_url = :original_url
+            AND (user_id = :user_id OR user_id IS NULL OR user_id = 0)
         ");
         
         $stmt->execute([
             ':release_id' => $releaseId,
             ':type' => $type,
-            ':original_url' => $imageUrl
+            ':original_url' => $imageUrl,
+            ':user_id' => $_SESSION['user_id'] ?? null
         ]);
         
         return (bool)$stmt->fetch(PDO::FETCH_COLUMN);
     }
     
     public function releaseExists($releaseId) {
+        // First check user-specific releases
         $stmt = $this->db->prepare("
-            SELECT 1 FROM releases WHERE id = :id
+            SELECT 1 FROM releases WHERE id = :id AND user_id = :user_id
         ");
         
-        $stmt->execute([':id' => $releaseId]);
-        return (bool)$stmt->fetch(PDO::FETCH_COLUMN);
+        $stmt->execute([
+            ':id' => $releaseId,
+            ':user_id' => $_SESSION['user_id'] ?? null
+        ]);
+        $exists = (bool)$stmt->fetch(PDO::FETCH_COLUMN);
+        
+        // If not found, check for shared/legacy releases
+        if (!$exists) {
+            $stmt = $this->db->prepare("
+                SELECT 1 FROM releases WHERE id = :id AND (user_id IS NULL OR user_id = 0)
+            ");
+            
+            $stmt->execute([':id' => $releaseId]);
+            $exists = (bool)$stmt->fetch(PDO::FETCH_COLUMN);
+        }
+        
+        return $exists;
     }
     
     public function createPlaceholderRelease($releaseId) {
         $stmt = $this->db->prepare("
-            INSERT OR IGNORE INTO releases (id, data, last_updated)
-            VALUES (:id, '{}', CURRENT_TIMESTAMP)
+            INSERT OR IGNORE INTO releases (id, data, last_updated, user_id)
+            VALUES (:id, '{}', CURRENT_TIMESTAMP, :user_id)
         ");
         
-        return $stmt->execute([':id' => $releaseId]);
+        return $stmt->execute([
+            ':id' => $releaseId,
+            ':user_id' => $_SESSION['user_id'] ?? null
+        ]);
     }
     
     public function cacheCollection($cacheKey, $data) {
@@ -244,13 +322,14 @@ class CacheService {
         }
 
         $stmt = $this->db->prepare("
-            INSERT OR REPLACE INTO releases (id, data, is_basic_data, last_updated)
-            VALUES (:id, :data, 0, CURRENT_TIMESTAMP)
+            INSERT OR REPLACE INTO releases (id, data, is_basic_data, last_updated, user_id)
+            VALUES (:id, :data, 0, CURRENT_TIMESTAMP, :user_id)
         ");
         
         return $stmt->execute([
             ':id' => $cacheKey,  // Already includes user_id in the key
-            ':data' => json_encode($data)
+            ':data' => json_encode($data),
+            ':user_id' => $data['user_id']
         ]);
     }
     

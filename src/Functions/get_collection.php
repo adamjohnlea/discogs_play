@@ -111,8 +111,12 @@ function get_collection() {
                     $release[$key] = $value;
                 }
             } else {
-                // Cache the basic info with the basic data flag
-                $cacheService->cacheRelease($releaseId, $release['basic_information'], null, true);
+                // Only cache the basic info if we don't already have detailed data for this release
+                $existingData = $cacheService->getCachedRelease($releaseId);
+                if (!$existingData || $existingData['is_basic_data']) {
+                    // Only cache basic info if no cache exists or if existing cache is also basic
+                    $cacheService->cacheRelease($releaseId, $release['basic_information'], true);
+                }
             }
         }
         

@@ -8,10 +8,12 @@
     transition: all 0.2s ease;
 }
 
+/* Removing hover effect on cards
 .card:hover {
     border-color: rgba(255, 255, 255, 0.2);
     background: rgba(33, 37, 41, 0.9);
 }
+*/
 
 .card-body {
     padding: 1rem;
@@ -60,14 +62,15 @@
 }
 
 .card img {
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    transition: opacity 0.2s ease;
+    border-radius: 0.25rem;
+    opacity: 1 !important; /* Force full opacity */
 }
 
+/* Removing hover effect on album covers
 .card:hover img {
     opacity: 0.95;
 }
+*/
 
 /* Card images */
 .card-img-top {
@@ -75,7 +78,8 @@
     height: auto;
     object-fit: contain;
     aspect-ratio: 1/1;
-    padding: 1rem;
+    padding: 0; /* Remove padding */
+    background: transparent; /* Ensure transparent background */
 }
 
 /* List group items within cards */
@@ -87,13 +91,13 @@
 
 /* Add lazy loading styles */
 img.loading {
-    opacity: 0.6;
+    opacity: 1 !important; /* Force full opacity */
     transition: opacity 0.3s;
 }
 
 img[data-src] {
-    opacity: 0.2;
-    background-color: #f0f0f0;
+    opacity: 1 !important; /* Force full opacity */
+    background-color: transparent;
     position: relative;
     min-height: 100px;
 }

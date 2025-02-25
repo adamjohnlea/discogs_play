@@ -21,6 +21,7 @@ Migration::register(new RemoveOAuthConsumerFieldsV1($db));
 Migration::register(new RemovePatFieldsFromUserSettingsV1($db));
 Migration::register(new CreateCollectionSearch($db));
 Migration::register(new CreateWantlistTables($db));
+Migration::register(new AddUserIdColumns($db));
 
 $command = $argv[1] ?? 'help';
 
