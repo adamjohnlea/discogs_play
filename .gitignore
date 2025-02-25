@@ -44,6 +44,9 @@ Thumbs.db
 /public/img/wantlist/releases/*
 !/public/img/wantlist/releases/.gitkeep
 
+# Test directory
+/public/tests/
+
 # PHP specific
 *.phar
 *.phpunit.result.cache
