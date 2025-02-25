@@ -1,0 +1,117 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+echo "=== DISCOGS PLAYER COMPLETE CACHE CLEANUP ===\n\n";
+
+// ==== PART 1: CLEAR DATABASE CACHE TABLES ====
+echo "STEP 1: Clearing database cache tables...\n";
+
+$cacheService = new CacheService($config);
+$db = DatabaseService::getInstance($config)->getConnection();
+$cacheSuccess = true;
+
+try {
+    // Clear standard cache tables
+    if ($cacheService->clearCache()) {
+        echo "- Standard cache tables cleared successfully.\n";
+    } else {
+        echo "- Failed to clear standard cache tables.\n";
+        $cacheSuccess = false;
+    }
+    
+    // Clear additional wantlist and collection tables
+    echo "- Clearing additional tables...\n";
+    
+    $tables = [
+        'collection_search',
+        'wantlist_images',
+        'wantlist_items',
+        'wantlist_search'
+    ];
+    
+    foreach ($tables as $table) {
+        try {
+            $result = $db->exec("DELETE FROM " . $table);
+            echo "  ✓ Table {$table} cleared successfully.\n";
+        } catch (Exception $e) {
+            echo "  ✗ Failed to clear table {$table}: " . $e->getMessage() . "\n";
+            $cacheSuccess = false;
+        }
+    }
+    
+    if ($cacheSuccess) {
+        echo "- All database cache cleared successfully.\n";
+    } else {
+        echo "- There were issues clearing some database tables.\n";
+    }
+} catch (Exception $e) {
+    echo "- Error clearing database cache: " . $e->getMessage() . "\n";
+    $cacheSuccess = false;
+}
+
+echo "\n";
+
+// ==== PART 2: CLEAR IMAGE FILES ====
+echo "STEP 2: Clearing cached image files...\n";
+
+// Image directories to clear
+$imageDirs = [
+    __DIR__ . '/../public/img/covers',
+    __DIR__ . '/../public/img/releases',
+    __DIR__ . '/../public/img/wantlist/covers',
+    __DIR__ . '/../public/img/wantlist/releases'
+];
+
+$imageSuccess = true;
+$totalFilesRemoved = 0;
+
+foreach ($imageDirs as $dir) {
+    try {
+        echo "- Cleaning directory: " . basename($dir) . "\n";
+        
+        if (!is_dir($dir)) {
+            echo "  ✗ Warning: Directory does not exist: $dir\n";
+            continue;
+        }
+        
+        $files = glob($dir . '/*');
+        $filesRemoved = 0;
+        
+        foreach ($files as $file) {
+            // Skip directories and .gitkeep files
+            if (is_dir($file) || basename($file) === '.gitkeep') {
+                continue;
+            }
+            
+            if (unlink($file)) {
+                $filesRemoved++;
+                $totalFilesRemoved++;
+            } else {
+                echo "  ✗ Failed to remove file: " . basename($file) . "\n";
+                $imageSuccess = false;
+            }
+        }
+        
+        echo "  ✓ Removed $filesRemoved files from " . basename($dir) . "\n";
+        
+    } catch (Exception $e) {
+        echo "  ✗ Error processing directory $dir: " . $e->getMessage() . "\n";
+        $imageSuccess = false;
+    }
+}
+
+echo "\n";
+echo "=== CLEANUP SUMMARY ===\n";
+echo "Database cache tables: " . ($cacheSuccess ? "ALL CLEARED" : "ERRORS ENCOUNTERED") . "\n";
+echo "Image cache files: " . ($imageSuccess ? "ALL CLEARED ($totalFilesRemoved files removed)" : "ERRORS ENCOUNTERED") . "\n";
+echo "Overall status: " . (($cacheSuccess && $imageSuccess) ? "SUCCESS" : "COMPLETED WITH ERRORS") . "\n";
+
+if ($cacheSuccess && $imageSuccess) {
+    echo "\nAll cache data has been successfully cleared.\n";
+    exit(0);
+} else {
+    echo "\nThere were issues clearing some cache data. Check the output above for details.\n";
+    exit(1);
+} 
